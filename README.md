@@ -42,4 +42,4 @@ for frame in video:
 
 #### Other Interfaces
 
-For other usages, please see the comments in `diva_io.video.reader.py`.
+For other usages, please see the comments in `diva_io/video/reader.py`.
