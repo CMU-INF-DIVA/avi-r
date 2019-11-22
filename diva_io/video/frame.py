@@ -6,45 +6,21 @@ class Frame(object):
 
     def __init__(self, frame: VideoFrame, fix_missing_offset: int = 0):
         """Frame wrapper of av.VideoFrame.
-        
+
         Parameters
         ----------
         frame : av.VideoFrame
             VideoFrame object to be wrapped.
         fix_missing_offset : int, optional
             Frame id offset to fix a missing frame, by default 0
-        """        
+        """
         self.frame = frame
         self.fix_missing_offset = fix_missing_offset
 
     @property
-    def frame_index_display(self) -> int:
-        """The correct frame index for display, 0 based.
-
-        Returns
-        -------
-        int
-            Frame index for display.
-        """
-        return self.frame.pts - 1
-
-    @property
-    def frame_index_store(self) -> int:
-        """The frame index as stored in the video, 0 based.
-        If you used cv2.VideoCapture.read() to read a video sequentially, this 
-        is the index you would get.
-
-        Returns
-        -------
-        int
-            Frame index as stored.
-        """
-        return self.frame.index
-
-    @property
     def frame_id(self) -> int:
         """Frame id for external use, including fixing for a missing frame.
-        """        
+        """
         return self.frame_index_display + self.fix_missing_offset
 
     def image(self):
@@ -76,6 +52,30 @@ class Frame(object):
             Numpy array of the frame.
         """
         return self.frame.to_ndarray(width=width, height=height, format=format)
+
+    @property
+    def frame_index_display(self) -> int:
+        """The correct frame index for display, 0 based.
+
+        Returns
+        -------
+        int
+            Frame index for display.
+        """
+        return self.frame.pts - 1
+
+    @property
+    def frame_index_store(self) -> int:
+        """The frame index as stored in the video, 0 based.
+        If you used cv2.VideoCapture.read() to read a video sequentially, this 
+        is the index you would get.
+
+        Returns
+        -------
+        int
+            Frame index as stored.
+        """
+        return self.frame.index
 
     def __repr__(self):
         return '<%s contains %s>' % (

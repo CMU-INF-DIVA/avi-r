@@ -33,8 +33,10 @@ class VideoReader(object):
         self.path = osp.join(parent_dir, video_path)
         if not osp.exists(self.path):
             raise FileNotFoundError(self.path)
-        self.fix_missing = fix_missing
         self.logger = get_logger(__name__)
+        self.fix_missing = fix_missing
+        if not self.fix_missing:
+            self.logger.warn('Not fixing missing frames.')
         self._init()
         stream = self._container.streams.video[0]
         self.length = stream.duration
@@ -44,7 +46,7 @@ class VideoReader(object):
         self._container = av.open(self.path)
         self._generator = self._get_generator()
         self.reseted = True
-        
+
     def reset(self):
         """Reset the internal states to load the video from the beginning.
         """
@@ -52,7 +54,6 @@ class VideoReader(object):
         self._init()
 
     def _decode(self):
-        print('reset')
         self.reseted = False
         for frame in self._container.decode():
             if isinstance(frame, av.VideoFrame):
@@ -140,7 +141,7 @@ class VideoReader(object):
             pass
         return frame
 
-    def get_iter(self, limit: int = None, cycle: int = 1) -> Frame:      
+    def get_iter(self, limit: int = None, cycle: int = 1) -> Frame:
         """Get an iterator to yield a frame every cycle frames and stop at a 
         limited number of yielded frames.
 
@@ -168,16 +169,15 @@ class VideoReader(object):
                 break
 
     def __iter__(self):
+        """Iterator interface to use in a for-loop directly as:
+        for frame in video:
+            pass
+        
+        Yields
+        -------
+        Frame
+            A Frame object.
+        """        
         if not self.reseted:
             self.reset()
         yield from self.get_iter()
-
-    def seek(self, frame_id: int):
-        """Due to current limitation of understanding the behaviours of the 
-        pyav package, random access with seek method can not be achieved.
-        """
-        raise NotImplementedError
-
-    def read_at(self, frame_id: int):
-        self.seek(frame_id)
-        return self.read()
