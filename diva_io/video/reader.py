@@ -42,75 +42,46 @@ class VideoReader(object):
         self.length = stream.duration
         self.fps = float(1 / stream.time_base)
 
-    def _init(self):
-        self._container = av.open(self.path)
-        self._generator = self._get_generator()
-        self.reseted = True
+    def __iter__(self):
+        """Iterator interface to use in a for-loop directly as:
+        for frame in video:
+            pass
 
-    def reset(self):
-        """Reset the internal states to load the video from the beginning.
-        """
-        self._container.close()
-        self._init()
-
-    def _decode(self):
-        self.reseted = False
-        for frame in self._container.decode():
-            if isinstance(frame, av.VideoFrame):
-                yield Frame(frame)
-
-    def _get_generator(self):
-        prev_frame = None
-        inserted_count = 0
-        for frame in self._decode():
-            offset = 0
-            while frame.frame_index_display > frame.frame_index_store + \
-                    inserted_count + offset:
-                offset += 1
-                if offset == 1:
-                    self.logger.warn(
-                        'Frame loss encountered between frame %d and frame %d.',
-                        prev_frame.frame_id, frame.frame_id)
-                if self.fix_missing:
-                    yield Frame(prev_frame.frame, offset)
-            inserted_count += offset
-            prev_frame = frame
-            yield frame
-
-    def read(self) -> Tuple[bool, np.ndarray]:
-        """Read the next frame from the video. Following the API of 
-        cv2.VideoCapture.read() for consistency in old codes. For new codes, 
-        the get method is recommended.
-
-        Returns
-        -------
-        bool
-            True when the read is successful, False when the video ends.
-
-        numpy.ndarray
-            The frame when successful, with format bgr24, shape (height, width, 
-            channel) and dtype int.
-        """
-        try:
-            frame = next(self._generator)
-        except StopIteration:
-            frame = None
-        return frame is not None, frame.numpy()
-
-    def get(self) -> Frame:
-        """Read the next frame from the video.
-
-        Returns
+        Yields
         -------
         Frame
-            The frame object.
-
-        Raises
-        -------
-        StopIteration
-            When the video ends.
+            A Frame object.
         """
-        return next(self._generator)
+        if not self.reseted:
+            self.reset()
+        yield from self.get_iter()
+
+    def get_iter(self, limit: int = None, cycle: int = 1) -> Frame:
+        """Get an iterator to yield a frame every cycle frames and stop at a 
+        limited number of yielded frames.
+
+        Parameters
+        ----------
+        limit : int, optional
+            Total number of frames to yield, by default None. If None, it 
+            yields until the video ends.
+
+        cycle : int, optional
+            The cycle length for each read, by default 1. If cycle = 1, no 
+            frames are skipped.
+
+        Yields
+        -------
+        Frame
+            A Frame object.
+        """
+        if limit is None or limit > self.length:
+            limit = self.length
+        for _ in range(limit):
+            try:
+                yield self.get_skip(cycle)
+            except StopIteration:
+                break
 
     def get_skip(self, cycle: int = 1) -> Frame:
         """Read a frame from the video every cycle frames. It returns the 
@@ -141,43 +112,72 @@ class VideoReader(object):
             pass
         return frame
 
-    def get_iter(self, limit: int = None, cycle: int = 1) -> Frame:
-        """Get an iterator to yield a frame every cycle frames and stop at a 
-        limited number of yielded frames.
+    def get(self) -> Frame:
+        """Read the next frame from the video.
 
-        Parameters
-        ----------
-        limit : int, optional
-            Total number of frames to yield, by default None. If None, it 
-            yields until the video ends.
-
-        cycle : int, optional
-            The cycle length for each read, by default 1. If cycle = 1, no 
-            frames are skipped.
-
-        Yields
+        Returns
         -------
         Frame
-            A Frame object.
+            The frame object.
+
+        Raises
+        -------
+        StopIteration
+            When the video ends.
         """
-        if limit is None or limit > self.length:
-            limit = self.length
-        for _ in range(limit):
-            try:
-                yield self.get_skip(cycle)
-            except StopIteration:
-                break
+        return next(self._generator)
 
-    def __iter__(self):
-        """Iterator interface to use in a for-loop directly as:
-        for frame in video:
-            pass
-        
-        Yields
+    def read(self) -> Tuple[bool, np.ndarray]:
+        """Read the next frame from the video. Following the API of 
+        cv2.VideoCapture.read() for consistency in old codes. For new codes, 
+        the get method is recommended.
+
+        Returns
         -------
-        Frame
-            A Frame object.
-        """        
-        if not self.reseted:
-            self.reset()
-        yield from self.get_iter()
+        bool
+            True when the read is successful, False when the video ends.
+
+        numpy.ndarray
+            The frame when successful, with format bgr24, shape (height, width, 
+            channel) and dtype int.
+        """
+        try:
+            frame = next(self._generator)
+        except StopIteration:
+            frame = None
+        return frame is not None, frame.numpy()
+
+    def reset(self):
+        """Reset the internal states to load the video from the beginning.
+        """
+        self._container.close()
+        self._init()
+
+    def _init(self):
+        self._container = av.open(self.path)
+        self._generator = self._get_generator()
+        self.reseted = True
+
+    def _decode(self):
+        self.reseted = False
+        for frame in self._container.decode():
+            if isinstance(frame, av.VideoFrame):
+                yield Frame(frame)
+
+    def _get_generator(self):
+        prev_frame = None
+        inserted_count = 0
+        for frame in self._decode():
+            offset = 0
+            while frame.frame_index_display > frame.frame_index_store + \
+                    inserted_count + offset:
+                offset += 1
+                if offset == 1:
+                    self.logger.warn(
+                        'Frame loss encountered between frame %d and frame %d.',
+                        prev_frame.frame_id, frame.frame_id)
+                if self.fix_missing:
+                    yield Frame(prev_frame.frame, offset)
+            inserted_count += offset
+            prev_frame = frame
+            yield frame
