@@ -27,6 +27,7 @@ If you are using MEVA, I suggest you change to this video loader ASAP.
 
 ### Replace `cv2.VideoCapture`
 
+According to my test, this video loader returns the exact same frame as `cv2.VideoCapture` unless missing frame or decoding error occured.
 To replace the `cv2.VideoCapture` objects in legacy codes, simply change from 
 
 ```python
