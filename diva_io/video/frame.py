@@ -4,8 +4,18 @@ from av import VideoFrame
 
 class Frame(object):
 
-    def __init__(self, frame: VideoFrame):
+    def __init__(self, frame: VideoFrame, fix_missing_offset: int = 0):
+        """Frame wrapper of av.VideoFrame.
+        
+        Parameters
+        ----------
+        frame : av.VideoFrame
+            VideoFrame object to be wrapped.
+        fix_missing_offset : int, optional
+            Frame id offset to fix a missing frame, by default 0
+        """        
         self.frame = frame
+        self.fix_missing_offset = fix_missing_offset
 
     @property
     def frame_index_display(self) -> int:
@@ -31,6 +41,12 @@ class Frame(object):
         """
         return self.frame.index
 
+    @property
+    def frame_id(self) -> int:
+        """Frame id for external use, including fixing for a missing frame.
+        """        
+        return self.frame_index_display + self.fix_missing_offset
+
     def image(self):
         """Get PIL Image for visualization in jupyter.
 
@@ -48,7 +64,7 @@ class Frame(object):
         Parameters
         ----------
         format : str, optional
-            Format parameter of av.VideoFrame.reformat(), by default 'rgb24'.
+            Format parameter of av.VideoFrame.reformat(), by default 'bgr24'.
         width : int, optional
             Desired width of the frame, by default None
         height : int, optional
