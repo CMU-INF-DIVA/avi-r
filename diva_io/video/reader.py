@@ -40,7 +40,10 @@ class VideoReader(object):
         self._init()
         stream = self._container.streams.video[0]
         self.length = stream.duration
-        self.fps = float(1 / stream.time_base)
+        self.fps = stream.average_rate
+        self.height = stream.codec_context.format.height
+        self.width = stream.codec_context.format.width
+        self.shape = (self.height, self.width)
 
     def __iter__(self):
         """Iterator interface to use in a for-loop directly as:
@@ -54,7 +57,7 @@ class VideoReader(object):
         """
         if not self.reseted:
             self.reset()
-        yield from self.get_iter()
+        yield from self._generator()
 
     def get_iter(self, limit: int = None, cycle: int = 1) -> Frame:
         """Get an iterator to yield a frame every cycle frames and stop at a 
@@ -156,13 +159,16 @@ class VideoReader(object):
     def _init(self):
         self._container = av.open(self.path)
         self._generator = self._get_generator()
+        self.frame_id = 0
         self.reseted = True
 
     def _decode(self):
         self.reseted = False
         for frame in self._container.decode():
             if isinstance(frame, av.VideoFrame):
-                yield Frame(frame)
+                frame = Frame(frame)
+                self.frame_id = frame.frame_id
+                yield frame
 
     def _get_generator(self):
         prev_frame = None
