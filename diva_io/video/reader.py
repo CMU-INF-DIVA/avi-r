@@ -155,6 +155,49 @@ class VideoReader(object):
         self._container.close()
         self._init()
 
+    def seek(self, frame_id: int):
+        """Brute force seek method for convenience.
+
+        Parameters
+        ----------
+        frame_id : int
+            Target frame id for next `get` call.
+
+        Raises
+        -------
+        ValueError
+            If the frame_id does not exist.
+        """
+        if frame_id > self.length:
+            raise ValueError('Frame id %d can not be seeked.' % (frame_id))
+        if frame_id <= self.frame_id:
+            self.reset()
+        if self.frame_id == frame_id - 1:
+            return
+        if frame_id - self.frame_id > 200:
+            self.logger.warn('Seeking across %d frames may take a long time.',
+                             frame_id - self.frame_id)
+        for frame in self._generator:
+            if frame.frame_id == frame_id - 1:
+                return
+        raise ValueError('Frame id %d can not be seeked.' % (frame_id))
+
+    def get_at(self, frame_id):
+        """Get a specific frame.
+
+        Parameters
+        ----------
+        frame_id : int
+            Target frame id for next `get` call.
+
+        Raises
+        -------
+        ValueError
+            If the frame_id does not exist.
+        """
+        self.seek(frame_id)
+        return self.get()
+
     def _init(self):
         self._container = av.open(self.path)
         self._stream = self._container.streams.video[0]
@@ -162,21 +205,12 @@ class VideoReader(object):
         self.frame_id = 0
         self.reseted = True
 
-    def _decode(self):
-        self.reseted = False
-        for package in self._container.demux(self._stream):
-            try:
-                for frame in package.decode():
-                    if isinstance(frame, av.VideoFrame):
-                        frame = Frame(frame)
-                        self.frame_id = frame.frame_id
-                        yield frame
-            except:
-                self.logger.warn(
-                    'Frame decode failed after frame %d', self.frame_id)
-                continue
-
     def _get_generator(self):
+        for frame in self._fix_missing():
+            self.frame_id = frame.frame_id
+            yield frame
+
+    def _fix_missing(self):
         prev_frame = None
         inserted_count = 0
         for frame in self._decode():
@@ -186,10 +220,24 @@ class VideoReader(object):
                 offset += 1
                 if offset == 1:
                     self.logger.warn(
-                        'Frame loss encountered between frame %d and frame %d.',
-                        prev_frame.frame_id, frame.frame_id)
+                        'Frame loss encountered between frame %d and frame %d '
+                        'of %s',
+                        prev_frame.frame_id, frame.frame_id, self.path)
                 if self.fix_missing:
                     yield Frame(prev_frame.frame, offset)
             inserted_count += offset
             prev_frame = frame
             yield frame
+
+    def _decode(self):
+        self.reseted = False
+        for package in self._container.demux(self._stream):
+            try:
+                for frame in package.decode():
+                    if isinstance(frame, av.VideoFrame):
+                        yield Frame(frame)
+            except:
+                self.logger.warn(
+                    'Frame decode failed after frame %d of %s', self.frame_id,
+                    self.path)
+                continue
