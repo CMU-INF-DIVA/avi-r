@@ -33,7 +33,7 @@ class VideoReader(object):
         self.path = osp.join(parent_dir, video_path)
         if not osp.exists(self.path):
             raise FileNotFoundError(self.path)
-        self.logger = get_logger(__name__)
+        self.logger = get_logger('%s@%s' % (__name__, self.path))
         self.fix_missing = fix_missing
         if not self.fix_missing:
             self.logger.warn('Not fixing missing frames.')
@@ -202,7 +202,7 @@ class VideoReader(object):
         self._container = av.open(self.path)
         self._stream = self._container.streams.video[0]
         self._generator = self._get_generator()
-        self.frame_id = 0
+        self.frame_id = -1
         self.reseted = True
 
     def _get_generator(self):
@@ -220,9 +220,8 @@ class VideoReader(object):
                 offset += 1
                 if offset == 1:
                     self.logger.warn(
-                        'Frame loss encountered between frame %d and frame %d '
-                        'of %s',
-                        prev_frame.frame_id, frame.frame_id, self.path)
+                        'Frame loss encountered between frame %d and frame %d.',
+                        prev_frame.frame_id, frame.frame_id)
                 if self.fix_missing:
                     yield Frame(prev_frame.frame, offset)
             inserted_count += offset
@@ -238,6 +237,5 @@ class VideoReader(object):
                         yield Frame(frame)
             except:
                 self.logger.warn(
-                    'Frame decode failed after frame %d of %s', self.frame_id,
-                    self.path)
+                    'Frame decode failed after frame %d.', self.frame_id)
                 continue
