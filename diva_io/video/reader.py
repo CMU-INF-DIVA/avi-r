@@ -145,9 +145,10 @@ class VideoReader(object):
         """
         try:
             frame = next(self._generator)
+            frame = frame.numpy()
         except StopIteration:
             frame = None
-        return frame is not None, frame.numpy()
+        return frame is not None, frame
 
     def reset(self):
         """Reset the internal states to load the video from the beginning.
