@@ -57,7 +57,8 @@ class KitwareAnnotation(object):
             act_type = [*act['act2'].keys()][0]
             start, end = act['timespan'][0]['tsr0']
             objects = []
-            for actor_id, actor in act['actors'].items():
+            for actor in act['actors']:
+                actor_id = actor['id1']
                 bbox_history = {}
                 for geom in actor['geom']:
                     frame_id = geom['ts0']
