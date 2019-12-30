@@ -24,7 +24,7 @@ class KitwareAnnotation(object):
 
     def _load_raw_data(self, video_name, annotation_dir):
         raw_data = {'meta': {}}
-        date, _, time = video_name.split('.')[:3]
+        date, time = video_name.split('.')[:2]
         for field in FIELDS:
             with open(osp.join(annotation_dir, date, time[:2],
                                '%s.%s.yml' % (video_name, field))) as f:
@@ -60,9 +60,9 @@ class KitwareAnnotation(object):
             for actor in act['actors']:
                 actor_id = actor['id1']
                 bbox_history = {}
-                for geom in actor['geom']:
+                for geom in actor['geoms']:
                     frame_id = geom['ts0']
-                    x1, y1, x2, y2 = [int(x) for x in geom['g0'].split()]
+                    x1, y1, x2, y2 = geom['g0']
                     bbox_history[frame_id] = {
                         'presenceConf': 1,
                         'boundingBox': {'x': x1, 'y': y1, 'w': x2 - x1,
