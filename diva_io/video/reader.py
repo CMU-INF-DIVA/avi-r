@@ -1,4 +1,5 @@
 import av
+import queue
 import numpy as np
 import os.path as osp
 from typing import Tuple
@@ -235,8 +236,10 @@ class VideoReader(object):
             try:
                 for frame in package.decode():
                     if isinstance(frame, av.VideoFrame):
+                        assert frame.pts == frame.dts + 1, \
+                            'Bidirectional frame not supported'
                         yield Frame(frame)
-            except:
+            except Exception:
                 self.logger.warn(
                     'Frame decode failed after frame %d.', self.frame_id)
                 continue
