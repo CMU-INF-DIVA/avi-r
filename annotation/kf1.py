@@ -2,15 +2,16 @@ import yaml
 import os.path as osp
 from collections import defaultdict
 
+
 FIELDS = ['activities', 'geom', 'types']
 
 
 class KitwareAnnotation(object):
 
-    def __init__(self, video_name, annotation_dir):
+    def __init__(self, video_name: str, annotation_dir: str):
+        # Please explore the structure of raw_data yourself
         self.video_name = video_name
         self.raw_data = self._load_raw_data(video_name, annotation_dir)
-        self.annotation = 0
 
     def _split_meta(self, contents, key):
         meta = []
@@ -22,16 +23,27 @@ class KitwareAnnotation(object):
         data = [content[key] for content in contents[i:]]
         return meta, data
 
+    def _load_file(self, video_name, annotation_dir, field):
+        date, time_1, time_2 = video_name.split('.')[:3]
+        for time in [time_1, time_2]:
+            path = osp.join(annotation_dir, date, time[:2], '%s.%s.yml' % (
+                video_name, field))
+            if not osp.exists(path):
+                continue
+            with open(path) as f:
+                contents = yaml.load(f, Loader=yaml.FullLoader)
+            return contents
+        path = osp.join(annotation_dir, date, time_1[:2], '%s.%s.yml' % (
+            video_name, field))
+        raise FileNotFoundError(path)
+
     def _load_raw_data(self, video_name, annotation_dir):
         raw_data = {'meta': {}}
-        date, time = video_name.split('.')[:2]
         for field in FIELDS:
-            with open(osp.join(annotation_dir, date, time[:2],
-                               '%s.%s.yml' % (video_name, field))) as f:
-                contents = yaml.load(f, Loader=yaml.FullLoader)
-                key = field if field != 'activities' else 'act'
-                raw_data['meta'][field], raw_data[field] = self._split_meta(
-                    contents, key)
+            contents = self._load_file(video_name, annotation_dir, field)
+            key = field if field != 'activities' else 'act'
+            raw_data['meta'][field], raw_data[field] = self._split_meta(
+                contents, key)
         objs = defaultdict(dict)
         for obj in raw_data['geom']:
             obj['g0'] = [int(x) for x in obj['g0'].split()]
@@ -55,6 +67,8 @@ class KitwareAnnotation(object):
         for act in self.raw_data['activities']:
             act_id = act['id2']
             act_type = [*act['act2'].keys()][0]
+            if act_type.startswith('empty'):
+                continue
             start, end = act['timespan'][0]['tsr0']
             objects = []
             for actor in act['actors']:
@@ -80,14 +94,3 @@ class KitwareAnnotation(object):
                 'objects': objects}
             activities.append(activity)
         return activities
-
-
-def get_reference(video_list, annotation_dir):
-    activities = []
-    for video_name in video_list:
-        annotation = KitwareAnnotation(video_name, annotation_dir)
-        activities.extend(annotation.get_activities_official())
-    reference = {'filesProcessed': video_list, 'activities': activities}
-    file_index = {video_name: {'framerate': 30.0, 'selected': {0: 1, 9000: 0}}
-                  for video_name in video_list}
-    return reference, file_index

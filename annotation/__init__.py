@@ -1,1 +1,1 @@
-from .kf1 import get_reference
+from .kf1 import KitwareAnnotation

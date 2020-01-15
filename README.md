@@ -1,18 +1,30 @@
 # DIVA IO Package
 
-Version 0.1
+Version 0.2
 
 Author: Lijun Yu
 
 Email: lijun@lj-y.com
 
-## Requirements
+## Installation
+
+### Integration
+
+To use as a submodule in your git project, run
+
+```sh
+git submodule add https://github.com/Lijun-Yu/diva-io.git diva_io
+```
+
+### Requirements
 
 Environment requirements are listed in `environment.yml`.
 For the `av` package, I recommend you install it via `conda` by 
+
 ```sh
 conda install av -c conda-forge
 ```
+
 as building from `pip` would require a lot of dependencies.
 
 ## Video Loader
@@ -50,10 +62,42 @@ cap = VideoReader(video_path)
 video = VideoReader(video_path)
 for frame in video:
     # frame is a diva_io.video.frame.Frame object
-    image = frame.numpy() 
-    # image is an uint8 array shape (height, width, channel[bgr])
+    image = frame.numpy()
+    # image is an uint8 array shape (height, width, channel[BGR])
+```
+
+### Video Properties
+
+```python
+video.width # cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+video.height # cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+video.fps # cap.get(cv2.CAP_PROP_FPS)
 ```
 
 ### Other Interfaces
 
-For other usages, please see the comments in `diva_io/video/reader.py`.
+For other usages, please see the comments in `video/reader.py`.
+
+## Annotation
+
+An annotation loader and converter for Kitware YML format in [meva-data-repo](https://gitlab.kitware.com/meva/meva-data-repo).
+
+Clone the meva-data-repo and set `annotation_dir` to `meva-data-repo/annotation/DIVA-phase-2/MEVA/meva-annotations`.
+
+### Convert Annotation
+
+This is to convert the annotation from Kitware YML format to ActEV Scorer JSON format.
+Run the following command in shell outside the repo's director,
+
+```sh
+python -m diva_io.annotation.converter <annotation_dir> <output_dir>
+```
+
+### Read Annotation
+
+```python
+from diva_io.annotation import KitwareAnnotation
+video_name = '2018-03-11.11-15-04.11-20-04.school.G300'
+annotation = KitwareAnnotation(video_name, annotation_dir)
+# deal with annotation.raw_data
+```

@@ -40,7 +40,7 @@ class VideoReader(object):
             self.logger.warn('Not fixing missing frames.')
         self._init()
         self.length = self._stream.duration
-        self.fps = self._stream.average_rate
+        self.fps = float(self._stream.average_rate)
         self.height = self._stream.codec_context.format.height
         self.width = self._stream.codec_context.format.width
         self.shape = (self.height, self.width)
