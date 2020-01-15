@@ -11,7 +11,8 @@ Email: lijun@lj-y.com
 * 0.2
   * **Real** random access in video loader.
   * Add annotation converter.
-* 0.1 Initial release of video loader.
+* 0.1
+  * Initial release of video loader.
 
 ## Installation
 
@@ -26,7 +27,7 @@ git submodule add https://github.com/Lijun-Yu/diva-io.git diva_io
 ### Requirements
 
 Environment requirements are listed in `environment.yml`.
-For the `av` package, I recommend you install it via `conda` by 
+For the `av` package, I recommend you install it via `conda` by
 
 ```sh
 conda install av -c conda-forge
@@ -36,7 +37,7 @@ as building from `pip` would require a lot of dependencies.
 
 ## Video Loader
 
-A robust video loader that deals with missing frames in the [MEVA dataset](http://mevadata.org). 
+A robust video loader that deals with missing frames in the [MEVA dataset](http://mevadata.org).
 
 This video loader is developed based on [`PyAV`](https://github.com/mikeboers/PyAV) package.
 The [`pims`](https://github.com/soft-matter/pims) package was also a good reference despite its compatibility issue with current `PyAV`.
@@ -47,7 +48,7 @@ If you are using MEVA, I suggest you change to this video loader ASAP.
 ### Replace `cv2.VideoCapture`
 
 According to my test, this video loader returns the exact same frame as `cv2.VideoCapture` unless missing frame or decoding error occured.
-To replace the `cv2.VideoCapture` objects in legacy codes, simply change from 
+To replace the `cv2.VideoCapture` objects in legacy codes, simply change from
 
 ```python
 import cv2
