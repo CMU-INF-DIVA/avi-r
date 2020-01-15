@@ -6,6 +6,13 @@ Author: Lijun Yu
 
 Email: lijun@lj-y.com
 
+## Version History
+
+* 0.2
+  * **Real** random access in video loader.
+  * Add annotation converter.
+* 0.1 Initial release of video loader.
+
 ## Installation
 
 ### Integration
@@ -26,13 +33,6 @@ conda install av -c conda-forge
 ```
 
 as building from `pip` would require a lot of dependencies.
-
-## Version History
-
-* 0.2
-  * **Real** random access in video loader.
-  * Add annotation converter.
-* 0.1 Initial release of video loader.
 
 ## Video Loader
 
