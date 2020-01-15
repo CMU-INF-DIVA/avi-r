@@ -20,7 +20,7 @@ class VideoReader(object):
             Path of the video file, will be joint with parent_dir if specified.
 
         parent_dir : str, optional
-            Parent directory of the videos, convenient for path management, by 
+            Parent directory of the videos, convenient for path management, by
             default ''.
 
         fix_missing : bool, optional
@@ -34,16 +34,20 @@ class VideoReader(object):
         self.path = osp.join(parent_dir, video_path)
         if not osp.exists(self.path):
             raise FileNotFoundError(self.path)
-        self.logger = get_logger('%s@%s' % (__name__, self.path))
+        self._logger = get_logger('%s@%s' % (__name__, self.path))
+        self._assert_msg = ' Please report %s to Lijun.' % (self.path)
         self.fix_missing = fix_missing
         if not self.fix_missing:
-            self.logger.warn('Not fixing missing frames.')
+            self._logger.warning('Not fixing missing frames.')
         self._init()
         self.length = self._stream.duration
         self.fps = float(self._stream.average_rate)
         self.height = self._stream.codec_context.format.height
         self.width = self._stream.codec_context.format.width
         self.shape = (self.height, self.width)
+
+    def __del__(self):
+        self._container.close()
 
     def __iter__(self):
         """Iterator interface to use in a for-loop directly as:
@@ -57,20 +61,20 @@ class VideoReader(object):
         """
         if not self.reseted:
             self.reset()
-        yield from self._generator
+        yield from self._frame_gen
 
     def get_iter(self, limit: int = None, cycle: int = 1) -> Frame:
-        """Get an iterator to yield a frame every cycle frames and stop at a 
+        """Get an iterator to yield a frame every cycle frames and stop at a
         limited number of yielded frames.
 
         Parameters
         ----------
         limit : int, optional
-            Total number of frames to yield, by default None. If None, it 
+            Total number of frames to yield, by default None. If None, it
             yields until the video ends.
 
         cycle : int, optional
-            The cycle length for each read, by default 1. If cycle = 1, no 
+            The cycle length for each read, by default 1. If cycle = 1, no
             frames are skipped.
 
         Yields
@@ -87,14 +91,14 @@ class VideoReader(object):
                 break
 
     def get_skip(self, cycle: int = 1) -> Frame:
-        """Read a frame from the video every cycle frames. It returns the 
-        immediate next frame and skips cycle - 1 frames for the next call of 
+        """Read a frame from the video every cycle frames. It returns the
+        immediate next frame and skips cycle - 1 frames for the next call of
         get.
 
         Parameters
         ----------
         cycle : int, optional
-            The cycle length for each read, by default 1. If cycle = 1, no 
+            The cycle length for each read, by default 1. If cycle = 1, no
             frames are skipped.
 
         Returns
@@ -128,11 +132,11 @@ class VideoReader(object):
         StopIteration
             When the video ends.
         """
-        return next(self._generator)
+        return next(self._frame_gen)
 
     def read(self) -> Tuple[bool, np.ndarray]:
-        """Read the next frame from the video. Following the API of 
-        cv2.VideoCapture.read() for consistency in old codes. For new codes, 
+        """Read the next frame from the video. Following the API of
+        cv2.VideoCapture.read() for consistency in old codes. For new codes,
         the get method is recommended.
 
         Returns
@@ -141,11 +145,11 @@ class VideoReader(object):
             True when the read is successful, False when the video ends.
 
         numpy.ndarray
-            The frame when successful, with format bgr24, shape (height, width, 
+            The frame when successful, with format bgr24, shape (height, width,
             channel) and dtype int.
         """
         try:
-            frame = next(self._generator)
+            frame = next(self._frame_gen)
             frame = frame.numpy()
         except StopIteration:
             frame = None
@@ -158,7 +162,7 @@ class VideoReader(object):
         self._init()
 
     def seek(self, frame_id: int):
-        """Brute force seek method for convenience.
+        """Seek to a specific position in the video.
 
         Parameters
         ----------
@@ -170,19 +174,11 @@ class VideoReader(object):
         ValueError
             If the frame_id does not exist.
         """
-        if frame_id > self.length:
-            raise ValueError('Frame id %d can not be seeked.' % (frame_id))
-        if frame_id <= self.frame_id:
-            self.reset()
-        if self.frame_id == frame_id - 1:
-            return
-        if frame_id - self.frame_id > 200:
-            self.logger.warn('Seeking across %d frames may take a long time.',
-                             frame_id - self.frame_id)
-        for frame in self._generator:
-            if frame.frame_id == frame_id - 1:
-                return
-        raise ValueError('Frame id %d can not be seeked.' % (frame_id))
+        if frame_id >= self.length:
+            raise ValueError(
+                'Cannot seek frame id %d in a video of length %d' % (
+                    frame_id, self.length))
+        self._frame_gen = self._get_frame_gen(frame_id)
 
     def get_at(self, frame_id):
         """Get a specific frame.
@@ -203,43 +199,51 @@ class VideoReader(object):
     def _init(self):
         self._container = av.open(self.path)
         self._stream = self._container.streams.video[0]
-        self._generator = self._get_generator()
-        self.frame_id = -1
+        self._packets = [*self._container.demux(self._stream)][:-1]
+        self._key_frame_ids = [
+            i for i, p in enumerate(self._packets) if p.is_keyframe]
+        assert len(self._packets) == self._stream.duration
+        assert [p.pts for p in self._packets] == [*range(
+            1, len(self._packets) + 1)], \
+            'Packets pts not in order' + self._assert_msg
+        self._frame_gen = self._get_frame_gen()
         self.reseted = True
 
-    def _get_generator(self):
-        for frame in self._fix_missing():
-            self.frame_id = frame.frame_id
-            yield frame
-
-    def _fix_missing(self):
-        prev_frame = None
-        inserted_count = 0
-        for frame in self._decode():
-            offset = 0
-            while frame.frame_index_display > frame.frame_index_store + \
-                    inserted_count + offset:
-                offset += 1
-                if offset == 1:
-                    self.logger.warn(
-                        'Frame loss encountered between frame %d and frame %d.',
-                        prev_frame.frame_id, frame.frame_id)
+    def _get_frame_gen(self, start_frame_id=0):
+        for key_frame_index, frame_id in enumerate(self._key_frame_ids):
+            if frame_id > start_frame_id:
+                break
+        frame = None
+        while frame is None and key_frame_index > 0:
+            key_frame_index -= 1
+            key_frame_id = self._key_frame_ids[key_frame_index]
+            frame = self._decode(key_frame_id)
+        prev_frame = frame
+        assert prev_frame is not None
+        for frame_id in range(key_frame_id + 1, start_frame_id):
+            frame = self._decode(frame_id)
+            if frame is not None:
+                prev_frame = frame
+        for frame_id in range(start_frame_id, self.length):
+            frame = self._decode(frame_id)
+            if frame is not None:
+                yield frame
+                prev_frame = frame
+            else:
                 if self.fix_missing:
-                    yield Frame(prev_frame.frame, offset)
-            inserted_count += offset
-            prev_frame = frame
-            yield frame
+                    self._logger.warning('Missing frame %d, used frame %d',
+                                         frame_id, prev_frame.frame_id)
+                    yield prev_frame
+                else:
+                    self._logger.warning('Missing frame %d, skipped', frame_id)
 
-    def _decode(self):
-        self.reseted = False
-        for package in self._container.demux(self._stream):
-            try:
-                for frame in package.decode():
-                    if isinstance(frame, av.VideoFrame):
-                        assert frame.pts == frame.dts + 1, \
-                            'Bidirectional frame not supported'
-                        yield Frame(frame)
-            except Exception:
-                self.logger.warn(
-                    'Frame decode failed after frame %d.', self.frame_id)
-                continue
+    def _decode(self, frame_id):
+        packet = self._packets[frame_id]
+        frames = packet.decode()
+        assert len(frames) <= 1, 'More than one frame in a packet.' + \
+            self._assert_msg
+        if len(frames) == 0:
+            return None
+        frame = frames[0]
+        assert isinstance(frame, av.VideoFrame)
+        return Frame(frame)

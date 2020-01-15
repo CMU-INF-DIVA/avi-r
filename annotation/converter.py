@@ -39,7 +39,7 @@ def _write_files(data_dict, output_dir):
     for filename, data in data_dict.items():
         path = osp.join(output_dir, filename + '.json')
         if osp.exists(path):
-            logger.warn('Overwriting file %s', path)
+            logger.warning('Overwriting file %s', path)
         with open(path, 'w') as f:
             json.dump(data, f)
 

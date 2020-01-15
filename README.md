@@ -27,6 +27,13 @@ conda install av -c conda-forge
 
 as building from `pip` would require a lot of dependencies.
 
+## Version History
+
+* 0.2
+  * **Real** random access in video loader.
+  * Add annotation converter.
+* 0.1 Initial release of video loader.
+
 ## Video Loader
 
 A robust video loader that deals with missing frames in the [MEVA dataset](http://mevadata.org). 
@@ -63,7 +70,22 @@ video = VideoReader(video_path)
 for frame in video:
     # frame is a diva_io.video.frame.Frame object
     image = frame.numpy()
-    # image is an uint8 array shape (height, width, channel[BGR])
+    # image is an uint8 array in a shape of (height, width, channel[BGR])
+    # ... Do something with the image
+```
+
+### Random Access
+
+Random access of a frame requires decoding from the nearest key frame (approximately every 60 frames for MEVA).
+Averagely, this introduces a constant overhead of 0.1 seconds, which is much faster than iterating from the beginning.
+
+```python
+start_frame_id = 1500
+length = 100
+video.seek(start_frame_id)
+for frame in video.get_iter(length):
+    image = frame.numpy()
+    # ... Do something with the image
 ```
 
 ### Video Properties
@@ -82,7 +104,11 @@ For other usages, please see the comments in `video/reader.py`.
 
 An annotation loader and converter for Kitware YML format in [meva-data-repo](https://gitlab.kitware.com/meva/meva-data-repo).
 
-Clone the meva-data-repo and set `annotation_dir` to `meva-data-repo/annotation/DIVA-phase-2/MEVA/meva-annotations`.
+Clone the meva-data-repo and set
+
+```python
+annotation_dir = 'path/to/meva-data-repo/annotation/DIVA-phase-2/MEVA/meva-annotations'
+```
 
 ### Convert Annotation
 
