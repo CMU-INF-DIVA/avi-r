@@ -7,8 +7,6 @@ from typing import Tuple
 from ..utils import get_logger
 from .frame import Frame
 
-av.logging.set_level(av.logging.FATAL)
-
 
 class VideoReader(object):
 
@@ -37,6 +35,7 @@ class VideoReader(object):
         if not osp.exists(self.path):
             raise FileNotFoundError(self.path)
         self._logger = get_logger('%s@%s' % (__name__, self.path))
+        av.logging.set_level(av.logging.FATAL)
         self._assert_msg = ' Please report %s to Lijun.' % (self.path)
         self.fix_missing = fix_missing
         if not self.fix_missing:
