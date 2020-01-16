@@ -7,6 +7,8 @@ from typing import Tuple
 from ..utils import get_logger
 from .frame import Frame
 
+av.logging.set_level(av.logging.FATAL)
+
 
 class VideoReader(object):
 
@@ -231,8 +233,8 @@ class VideoReader(object):
                 prev_frame = frame
             else:
                 if self.fix_missing:
-                    self._logger.warning('Missing frame %d, used frame %d',
-                                         frame_id, prev_frame.frame_id)
+                    self._logger.info('Missing frame %d, used frame %d',
+                                      frame_id, prev_frame.frame_id)
                     yield prev_frame
                 else:
                     self._logger.warning('Missing frame %d, skipped', frame_id)
