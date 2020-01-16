@@ -240,7 +240,11 @@ class VideoReader(object):
 
     def _decode(self, frame_id):
         packet = self._packets[frame_id]
-        frames = packet.decode()
+        try:
+            frames = packet.decode()
+        except av.AVError:
+            self._logger.info('Decode failed for frame %d', frame_id)
+            return None
         assert len(frames) <= 1, 'More than one frame in a packet.' + \
             self._assert_msg
         if len(frames) == 0:
