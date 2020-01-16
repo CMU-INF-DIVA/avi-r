@@ -48,7 +48,8 @@ class VideoReader(object):
         self.shape = (self.height, self.width)
 
     def __del__(self):
-        self._container.close()
+        if hasattr(self, '_container'):
+            self._container.close()
 
     def __iter__(self):
         """Iterator interface to use in a for-loop directly as:
@@ -60,8 +61,7 @@ class VideoReader(object):
         Frame
             A Frame object.
         """
-        if not self.reseted:
-            self.reset()
+        self.reset()
         yield from self._frame_gen
 
     def get_iter(self, limit: int = None, cycle: int = 1) -> Frame:
@@ -208,7 +208,6 @@ class VideoReader(object):
             1, len(self._packets) + 1)], \
             'Packets pts not in order' + self._assert_msg
         self._frame_gen = self._get_frame_gen()
-        self.reseted = True
 
     def _get_frame_gen(self, start_frame_id=0):
         for key_frame_index, frame_id in enumerate(self._key_frame_ids):
