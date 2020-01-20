@@ -11,7 +11,7 @@ Email: lijun@lj-y.com
 * 0.2
   * **Real** random access in video loader.
   * Add annotation converter.
-  * Warning silented.
+  * Warning control option.
 * 0.1
   * Initial release of video loader.
 
