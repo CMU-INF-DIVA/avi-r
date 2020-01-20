@@ -1,5 +1,6 @@
 import av
 import queue
+import logging
 import numpy as np
 import os.path as osp
 from typing import Tuple
@@ -11,7 +12,7 @@ from .frame import Frame
 class VideoReader(object):
 
     def __init__(self, video_path: str, parent_dir: str = '',
-                 fix_missing: bool = True):
+                 fix_missing: bool = True, silence_warning: bool = True):
         """Read frames from a video file.
 
         Parameters
@@ -26,6 +27,11 @@ class VideoReader(object):
         fix_missing : bool, optional
             Whether to fix missing frames.
 
+        silence_warning : bool, optional
+            Whether to silence warnings from ffmpeg and warnings about missing 
+            frames when `fix_missing=True`. Warnings about missing frames are 
+            not silenced when `fix_missing=False`.
+
         Raises
         ------
         FileNotFoundError
@@ -34,8 +40,12 @@ class VideoReader(object):
         self.path = osp.join(parent_dir, video_path)
         if not osp.exists(self.path):
             raise FileNotFoundError(self.path)
-        self._logger = get_logger('%s@%s' % (__name__, self.path))
-        av.logging.set_level(av.logging.FATAL)
+        if silence_warning:
+            self._logger = get_logger(
+                '%s@%s' % (__name__, self.path), logging.WARNING)
+            av.logging.set_level(av.logging.FATAL)
+        else:
+            self._logger = get_logger('%s@%s' % (__name__, self.path))
         self._assert_msg = ' Please report %s to Lijun.' % (self.path)
         self.fix_missing = fix_missing
         if not self.fix_missing:
@@ -219,7 +229,6 @@ class VideoReader(object):
             key_frame_id = self._key_frame_ids[key_frame_index]
             frame = self._decode(key_frame_id)
         prev_frame = frame
-        assert prev_frame is not None
         for frame_id in range(key_frame_id + 1, start_frame_id):
             frame = self._decode(frame_id)
             if frame is not None:
@@ -233,21 +242,35 @@ class VideoReader(object):
                 if self.fix_missing:
                     self._logger.info('Missing frame %d, used frame %d',
                                       frame_id, prev_frame.frame_id)
+                    assert prev_frame is not None
                     yield prev_frame
                 else:
                     self._logger.warning('Missing frame %d, skipped', frame_id)
 
+    def _decode_one(self, packet):
+        frames = packet.decode()
+        if len(frames) == 0:
+            raise RuntimeError('Empty packet')
+        assert len(frames) <= 1, 'More than one frame in a packet.' + \
+            self._assert_msg
+        frame = frames[0]
+        assert isinstance(frame, av.VideoFrame)
+        frame = Frame(frame)
+        return frame
+
     def _decode(self, frame_id):
         packet = self._packets[frame_id]
         try:
-            frames = packet.decode()
-        except av.AVError:
+            decode_frame_id = -1
+            while decode_frame_id < frame_id:
+                frame = self._decode_one(packet)
+                if frame.frame_id == decode_frame_id:
+                    break
+                decode_frame_id = frame.frame_id
+            assert frame.frame_id == frame_id, \
+                'Frame id should be %d, but is %d.' % (
+                    frame_id, frame.frame_id) + self._assert_msg
+            return frame
+        except (av.AVError, RuntimeError):
             self._logger.info('Decode failed for frame %d', frame_id)
             return None
-        assert len(frames) <= 1, 'More than one frame in a packet.' + \
-            self._assert_msg
-        if len(frames) == 0:
-            return None
-        frame = frames[0]
-        assert isinstance(frame, av.VideoFrame)
-        return Frame(frame)

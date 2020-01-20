@@ -1,7 +1,7 @@
 import logging
 
 
-def get_logger(name, level=logging.WARNING, log_file=None):
+def get_logger(name, level=logging.INFO, log_file=None):
     logger = logging.getLogger(name)
     logger.setLevel(level)
     formatter = logging.Formatter(
