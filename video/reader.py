@@ -224,6 +224,7 @@ class VideoReader(object):
             if frame_id > start_frame_id:
                 break
         frame = None
+        key_frame_id = self._key_frame_ids[key_frame_index]
         while frame is None and key_frame_index > 0:
             key_frame_index -= 1
             key_frame_id = self._key_frame_ids[key_frame_index]
