@@ -1,6 +1,6 @@
 # DIVA IO Package
 
-Version 0.2
+Version 0.3
 
 Author: Lijun Yu
 
@@ -8,6 +8,9 @@ Email: lijun@lj-y.com
 
 ## Version History
 
+* 0.3
+  * Optimized random access and fix missing.
+  * Robustness improvement.
 * 0.2
   * **Real** random access in video loader.
   * Add annotation converter.
