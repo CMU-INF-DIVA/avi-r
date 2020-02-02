@@ -1,6 +1,6 @@
 import sys
 import time
-from progressbar import progressbar
+from progressbar import ProgressBar
 from .reader import VideoReader
 
 VIDEO_LIST = [
@@ -18,56 +18,45 @@ def integrity_test(video_list, video_dir, random_access_point=(5790, 100)):
     print('No fix missing')
     for video_name in video_list:
         print('\t', video_name, flush=True)
+        bar = ProgressBar().start()
         v = VideoReader(video_name, video_dir, fix_missing=False)
-        for i, f in progressbar(enumerate(v)):
+        for i, f in bar(enumerate(v)):
             pass
 
     print('Fix missing with random access')
+    start_frame_id, length = random_access_point
     for video_name in video_list:
         print('\t', video_name, flush=True)
+        bar = ProgressBar().start()
         v = VideoReader(video_name, video_dir)
-        for i, f in progressbar(enumerate(v)):
+        for i, f in bar(enumerate(v)):
             assert f.frame_id == i
-        start_frame_id, length = random_access_point
+        bar = ProgressBar().start()
+        v = VideoReader(video_name, video_dir)
         v.seek(start_frame_id)
-        for i, frame in progressbar(enumerate(v.get_iter(length))):
+        for i, frame in bar(enumerate(v.get_iter(length))):
             assert frame.frame_id == start_frame_id + i
 
 
-def speed_test(video_list, video_dir):
+def speed_test_moviepy(video_dir, video_list=VIDEO_LIST):
     from moviepy.editor import VideoFileClip
-    print('moviepy')
-    start = time.time()
     for video_name in video_list:
         print('\t', video_name, flush=True)
+        bar = ProgressBar().start()
         clip = VideoFileClip(video_dir + '/' + video_name)
-        for i in progressbar(range(int(clip.duration * clip.fps))):
+        for i in bar(range(int(clip.duration * clip.fps))):
             clip.get_frame(i / clip.fps)
-    duration = time.time() - start
-    print('Total time %.2f' % (duration))
 
-    print('diva io fix missing')
-    start = time.time()
+
+def speed_test_divaio(video_dir, fix_missing, video_list=VIDEO_LIST):
     for video_name in video_list:
         print('\t', video_name, flush=True)
-        v = VideoReader(video_name, video_dir)
-        for _ in progressbar(range(v.length)):
+        bar = ProgressBar().start()
+        v = VideoReader(video_name, video_dir, fix_missing=fix_missing)
+        for _ in bar(range(v.length)):
             v.read()
-    duration = time.time() - start
-    print('Total time %.2f' % (duration))
-
-    print('diva io not fix missing')
-    start = time.time()
-    for video_name in video_list:
-        print('\t', video_name, flush=True)
-        v = VideoReader(video_name, video_dir, fix_missing=False)
-        for _ in progressbar(range(v.length)):
-            v.read()
-    duration = time.time() - start
-    print('Total time %.2f' % (duration))
 
 
 if __name__ == "__main__":
     video_dir = sys.argv[1]
     integrity_test(VIDEO_LIST, video_dir)
-    speed_test(VIDEO_LIST, video_dir)

@@ -233,7 +233,7 @@ class VideoReader(object):
                 if success:
                     return
                 seek_frame_id -= retry_step
-        raise RuntimeError('Failed to seek to frame %d' % (start_frame_id))
+            raise RuntimeError('Failed to seek to frame %d' % (start_frame_id))
 
     def _fix_missing(self, start_frame_id):
         frame_gen = self._reorder()
