@@ -6,6 +6,8 @@ Author: Lijun Yu
 
 Email: lijun@lj-y.com
 
+IO interfaces for the [DIVA](https://www.iarpa.gov/index.php/research-programs/diva) project.
+
 ## Version History
 
 * 0.3
@@ -25,7 +27,7 @@ Email: lijun@lj-y.com
 To use as a submodule in your git project, run
 
 ```sh
-git submodule add https://github.com/Lijun-Yu/diva-io.git diva_io
+git submodule add https://github.com/Lijun-Yu/diva_io.git
 ```
 
 ### Requirements

@@ -214,16 +214,32 @@ class VideoReader(object):
         self._stream = self._container.streams.video[video_stream_id]
         self._frame_gen = self._get_frame_gen()
 
-    def _get_frame_gen(self, start_frame_id=0):
-        if start_frame_id != 0:
-            self._container.seek(start_frame_id, stream=self._stream)
-        for frame in self._fix_missing(start_frame_id):
-            if frame.frame_id >= start_frame_id:
-                yield frame
+    def _get_frame_gen(self, start_frame_id=0, retry=5, retry_step=120):
+        if start_frame_id == 0:
+            yield from self._fix_missing(start_frame_id)
+        else:
+            seek_frame_id = start_frame_id
+            for _ in range(retry):
+                if seek_frame_id != start_frame_id:
+                    self._logger.warn(
+                        'Failed to seek to frame %d, retrying with frame %d',
+                        start_frame_id, seek_frame_id)
+                self._container.seek(seek_frame_id, stream=self._stream)
+                success = False
+                for frame in self._fix_missing(start_frame_id):
+                    success = True
+                    if frame.frame_id >= start_frame_id:
+                        yield frame
+                if success:
+                    break
+                seek_frame_id -= retry_step
 
     def _fix_missing(self, start_frame_id):
         frame_gen = self._reorder()
-        frame = next(frame_gen)
+        try:
+            frame = next(frame_gen)
+        except StopIteration:
+            return
         if frame.frame_id > start_frame_id:
             yield from self._fix_missing_one(
                 start_frame_id, frame.frame_id - 1, frame)
@@ -261,7 +277,7 @@ class VideoReader(object):
                 'Missing frames from %d to %d, skipped',
                 start_frame_id, end_frame_id)
 
-    def _reorder(self, buffer_size=10):
+    def _reorder(self, buffer_size=5):
         buffer = []
         for frame in self._decode():
             heapq.heappush(buffer, (frame.frame_id, frame))
