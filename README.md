@@ -37,7 +37,7 @@ For the `av` package, I recommend you install it via `conda` by
 conda install av -c conda-forge
 ```
 
-as building from `pip` would require a lot of dependencies.
+as building from `pip` would require a lot of [dependencies](http://docs.mikeboers.com/pyav/7.0.0/overview/installation.html#dependencies).
 
 ## Video Loader
 
