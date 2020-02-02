@@ -68,5 +68,6 @@ def speed_test(video_list, video_dir):
 
 
 if __name__ == "__main__":
-    integrity_test(VIDEO_LIST, sys.argv[1])
-    speed_test(VIDEO_LIST, sys.argv[1])
+    video_dir = sys.argv[1]
+    integrity_test(VIDEO_LIST, video_dir)
+    speed_test(VIDEO_LIST, video_dir)

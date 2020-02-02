@@ -32,7 +32,7 @@ git submodule add https://github.com/Lijun-Yu/diva_io.git
 
 ### Requirements
 
-Environment requirements are listed in `environment.yml`.
+Environment requirements are listed in [environment.yml](environment.yml).
 For the `av` package, I recommend you install it via `conda` by
 
 ```sh
@@ -105,7 +105,11 @@ video.fps # cap.get(cv2.CAP_PROP_FPS)
 
 ### Other Interfaces
 
-For other usages, please see the comments in `video/reader.py`.
+For other usages, please see the comments in [video/reader.py](video/reader.py).
+
+### Speed
+
+See [speed.md](docs/speed.md).
 
 ## Annotation
 
