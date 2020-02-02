@@ -216,8 +216,7 @@ class VideoReader(object):
 
     def _get_frame_gen(self, start_frame_id=0):
         if start_frame_id != 0:
-            self._container.seek(start_frame_id, whence='frame',
-                                 stream=self._stream)
+            self._container.seek(start_frame_id, stream=self._stream)
         for frame in self._fix_missing(start_frame_id):
             if frame.frame_id >= start_frame_id:
                 yield frame
