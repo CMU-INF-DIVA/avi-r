@@ -231,8 +231,9 @@ class VideoReader(object):
                     if frame.frame_id >= start_frame_id:
                         yield frame
                 if success:
-                    break
+                    return
                 seek_frame_id -= retry_step
+        raise RuntimeError('Failed to seek to frame %d' % (start_frame_id))
 
     def _fix_missing(self, start_frame_id):
         frame_gen = self._reorder()
