@@ -1,5 +1,5 @@
 import av
-import queue
+import heapq
 import logging
 import numpy as np
 import os.path as osp
@@ -45,21 +45,19 @@ class VideoReader(object):
                 '%s@%s' % (__name__, self.path), logging.WARNING)
             av.logging.set_level(av.logging.FATAL)
         else:
-            self._logger = get_logger('%s@%s' % (__name__, self.path))
+            self._logger = get_logger(
+                '%s@%s' % (__name__, self.path), logging.INFO)
+            av.logging.set_level(av.logging.INFO)
         self._assert_msg = ' Please report %s to Lijun.' % (self.path)
         self.fix_missing = fix_missing
         if not self.fix_missing:
-            self._logger.warning('Not fixing missing frames.')
+            self._logger.warning('NOT fixing missing frames.')
         self._init()
         self.length = self._stream.duration
         self.fps = float(self._stream.average_rate)
         self.height = self._stream.codec_context.format.height
         self.width = self._stream.codec_context.format.width
         self.shape = (self.height, self.width)
-
-    def __del__(self):
-        if hasattr(self, '_container'):
-            self._container.close()
 
     def __iter__(self):
         """Iterator interface to use in a for-loop directly as:
@@ -166,12 +164,6 @@ class VideoReader(object):
             frame = None
         return frame is not None, frame
 
-    def reset(self):
-        """Reset the internal states to load the video from the beginning.
-        """
-        self._container.close()
-        self._init()
-
     def seek(self, frame_id: int):
         """Seek to a specific position in the video.
 
@@ -207,71 +199,84 @@ class VideoReader(object):
         self.seek(frame_id)
         return self.get()
 
-    def _init(self):
+    def reset(self):
+        """Reset the internal states to load the video from the beginning.
+        """
+        self._container.close()
+        self._init()
+
+    def __del__(self):
+        if hasattr(self, '_container'):
+            self._container.close()
+
+    def _init(self, video_stream_id=0):
         self._container = av.open(self.path)
-        self._stream = self._container.streams.video[0]
-        self._packets = [*self._container.demux(self._stream)][:-1]
-        self._key_frame_ids = [
-            i for i, p in enumerate(self._packets) if p.is_keyframe]
-        assert len(self._packets) == self._stream.duration
-        assert [p.pts for p in self._packets] == [*range(
-            1, len(self._packets) + 1)], \
-            'Packets pts not in order' + self._assert_msg
+        self._stream = self._container.streams.video[video_stream_id]
         self._frame_gen = self._get_frame_gen()
 
     def _get_frame_gen(self, start_frame_id=0):
-        for key_frame_index, frame_id in enumerate(self._key_frame_ids):
-            if frame_id > start_frame_id:
-                break
-        frame = None
-        key_frame_id = self._key_frame_ids[key_frame_index]
-        while frame is None and key_frame_index > 0:
-            key_frame_index -= 1
-            key_frame_id = self._key_frame_ids[key_frame_index]
-            frame = self._decode(key_frame_id)
-        prev_frame = frame
-        for frame_id in range(key_frame_id + 1, start_frame_id):
-            frame = self._decode(frame_id)
-            if frame is not None:
-                prev_frame = frame
-        for frame_id in range(start_frame_id, self.length):
-            frame = self._decode(frame_id)
+        if start_frame_id != 0:
+            self._container.seek(start_frame_id, whence='frame',
+                                 stream=self._stream)
+        for frame in self._fix_missing(start_frame_id):
+            if frame.frame_id >= start_frame_id:
+                yield frame
+
+    def _fix_missing(self, start_frame_id):
+        frame_gen = self._reorder()
+        frame = next(frame_gen)
+        if frame.frame_id > start_frame_id:
+            yield from self._fix_missing_one(
+                start_frame_id, frame.frame_id - 1, frame)
+        yield frame
+        while True:
+            prev_frame = frame
+            try:
+                frame = next(frame_gen)
+                next_frame_id = frame.frame_id
+            except StopIteration:
+                frame = None
+                next_frame_id = self.length
+            frame_gap = next_frame_id - prev_frame.frame_id
+            assert frame_gap >= 1, \
+                'Unreordered bidirectional frame occured.' + self._assert_msg
+            if frame_gap > 1:
+                yield from self._fix_missing_one(
+                    prev_frame.frame_id + 1, next_frame_id - 1, prev_frame)
             if frame is not None:
                 yield frame
-                prev_frame = frame
             else:
-                if self.fix_missing:
-                    self._logger.info('Missing frame %d, used frame %d',
-                                      frame_id, prev_frame.frame_id)
-                    assert prev_frame is not None
-                    yield prev_frame
-                else:
-                    self._logger.warning('Missing frame %d, skipped', frame_id)
+                return
 
-    def _decode_one(self, packet):
-        frames = packet.decode()
-        if len(frames) == 0:
-            raise RuntimeError('Empty packet')
-        assert len(frames) <= 1, 'More than one frame in a packet.' + \
-            self._assert_msg
-        frame = frames[0]
-        assert isinstance(frame, av.VideoFrame)
-        frame = Frame(frame)
-        return frame
+    def _fix_missing_one(self, start_frame_id, end_frame_id, src_frame):
+        if self.fix_missing:
+            self._logger.info(
+                'Missing frames from %d to %d, used frame %d',
+                start_frame_id, end_frame_id, src_frame.frame_id)
+            for frame_id in range(start_frame_id, end_frame_id + 1):
+                offset = frame_id - src_frame.frame_id
+                missing_frame = Frame(src_frame.frame, offset)
+                yield missing_frame
+        else:
+            self._logger.warn(
+                'Missing frames from %d to %d, skipped',
+                start_frame_id, end_frame_id)
 
-    def _decode(self, frame_id):
-        packet = self._packets[frame_id]
-        try:
-            decode_frame_id = -1
-            while decode_frame_id < frame_id:
-                frame = self._decode_one(packet)
-                if frame.frame_id == decode_frame_id:
-                    break
-                decode_frame_id = frame.frame_id
-            assert frame.frame_id == frame_id, \
-                'Frame id should be %d, but is %d.' % (
-                    frame_id, frame.frame_id) + self._assert_msg
-            return frame
-        except (av.AVError, RuntimeError):
-            self._logger.info('Decode failed for frame %d', frame_id)
-            return None
+    def _reorder(self, buffer_size=10):
+        buffer = []
+        for frame in self._decode():
+            heapq.heappush(buffer, (frame.frame_id, frame))
+            if len(buffer) > buffer_size:
+                _, frame = heapq.heappop(buffer)
+                yield frame
+        while len(buffer) > 0:
+            _, frame = heapq.heappop(buffer)
+            yield frame
+
+    def _decode(self):
+        for packet in self._container.demux():
+            try:
+                for frame in packet.decode():
+                    yield Frame(frame)
+            except av.AVError:
+                self._logger.info('Decode failed for packet %s', packet)

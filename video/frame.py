@@ -14,6 +14,7 @@ class Frame(object):
         fix_missing_offset : int, optional
             Frame id offset to fix a missing frame, by default 0
         """
+        assert isinstance(frame, VideoFrame)
         self.frame = frame
         self.fix_missing_offset = fix_missing_offset
 
