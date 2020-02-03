@@ -3,7 +3,7 @@
 Test performed by [video/speed_test.sh](../video/speed_test.sh).
 
 ```sh
-video/speed_test.sh <video_dir>
+./video/speed_test.sh <video_dir>
 ```
 
 ## Overall Performance
@@ -15,7 +15,7 @@ Loading all frames of 7 videos from the [MEVA dataset](http://mevadata.org). Eac
 | User Time | 338.12s | 329.00s | 904.09s |
 | System Time | 0.80s | 0.60s | 317.14s |
 | CPU Utilization | 99% | 99% | 293% |
-| Total Time | 5:38.98 | 5:29.60 | 6:56.31 |
+| Total Time | 338.98s | 329.60s | 416.31s |
 
 ## Detailed Results
 
