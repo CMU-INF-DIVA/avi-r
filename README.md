@@ -14,8 +14,8 @@ IO interfaces for the [DIVA](https://www.iarpa.gov/index.php/research-programs/d
   * Optimized random access and fix missing.
   * Robustness improvement.
   * Speed test.
-* 0.2
-  * **Real** random access in video loader.
+* 0.2 (Deprecated)
+  * Real random access in video loader.
   * Add annotation converter.
   * Warning control option.
 * 0.1
