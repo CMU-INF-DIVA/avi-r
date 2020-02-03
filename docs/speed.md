@@ -3,12 +3,14 @@
 Test performed by [video/speed_test.sh](../video/speed_test.sh).
 
 ```sh
-video/speed_test.sh <video_dir> &| tee docs/speed_test.log
+video/speed_test.sh <video_dir>
 ```
 
 ## Overall Performance
 
-|  | `diva_io.video .VideoReader (fix_missing=True)` | `diva_io.video .VideoReader (fix_missing=False)` | `pymovie.editor .VideoFileClip` |
+Loading all frames of 7 videos from the [MEVA dataset](http://mevadata.org). Each video is 5-min long and 1080p at 30 fps.
+
+|  | `diva_io.video.VideoReader (fix_missing=True)` | `diva_io.video.VideoReader (fix_missing=False)` | `pymovie.editor .VideoFileClip` |
 |:---------------:|:-----------------------------------------------:|:------------------------------------------------:|:-------------------------------:|
 | User Time | 338.12s | 329.00s | 904.09s |
 | System Time | 0.80s | 0.60s | 317.14s |
