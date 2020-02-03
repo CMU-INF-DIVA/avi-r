@@ -102,6 +102,7 @@ for frame in video.get_iter(length):
 video.width # cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 video.height # cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 video.fps # cap.get(cv2.CAP_PROP_FPS)
+video.length # cap.get(cv2.CAP_PROP_FRAME_COUNT)
 ```
 
 ### Other Interfaces

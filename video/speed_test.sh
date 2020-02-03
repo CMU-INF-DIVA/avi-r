@@ -11,3 +11,6 @@ time python -c "from diva_io.video.test import speed_test_divaio; speed_test_div
 
 echo "moviepy.editor.VideoFileClip"
 time python -c "from diva_io.video.test import speed_test_moviepy; speed_test_moviepy(\"$video_dir\")"
+
+echo "cv2.VideoCapture"
+time python -c "from diva_io.video.test import speed_test_opencv; speed_test_opencv(\"$video_dir\")"
