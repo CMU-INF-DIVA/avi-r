@@ -72,8 +72,8 @@ class VideoReader(object):
         self.reset()
         yield from self._frame_gen
 
-    def get_iter(self, limit: int = None, cycle: int = 1) -> Frame:
-        """Get an iterator to yield a frame every cycle frames and stop at a
+    def get_iter(self, limit: int = None, stride: int = 1) -> Frame:
+        """Get an iterator to yield a frame every stride frames and stop at a
         limited number of yielded frames.
 
         Parameters
@@ -82,8 +82,8 @@ class VideoReader(object):
             Total number of frames to yield, by default None. If None, it
             yields until the video ends.
 
-        cycle : int, optional
-            The cycle length for each read, by default 1. If cycle = 1, no
+        stride : int, optional
+            The stride length for each read, by default 1. If stride = 1, no
             frames are skipped.
 
         Yields
@@ -95,19 +95,19 @@ class VideoReader(object):
             limit = self.length
         for _ in range(limit):
             try:
-                yield self.get_skip(cycle)
+                yield self.get_skip(stride)
             except StopIteration:
                 break
 
-    def get_skip(self, cycle: int = 1) -> Frame:
-        """Read a frame from the video every cycle frames. It returns the
-        immediate next frame and skips cycle - 1 frames for the next call of
+    def get_skip(self, stride: int = 1) -> Frame:
+        """Read a frame from the video every stride frames. It returns the
+        immediate next frame and skips stride - 1 frames for the next call of
         get.
 
         Parameters
         ----------
-        cycle : int, optional
-            The cycle length for each read, by default 1. If cycle = 1, no
+        stride : int, optional
+            The stride length for each read, by default 1. If stride = 1, no
             frames are skipped.
 
         Returns
@@ -122,7 +122,7 @@ class VideoReader(object):
         """
         frame = self.get()
         try:
-            for _ in range(cycle - 1):
+            for _ in range(stride - 1):
                 self.get()
         except StopIteration:  # will be raised in the next call of get
             pass
