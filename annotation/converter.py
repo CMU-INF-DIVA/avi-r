@@ -11,7 +11,7 @@ from .kf1 import KitwareAnnotation
 def _get_video_list(annotation_dir):
     path = osp.join(annotation_dir, 'list-of-annotated-meva-clips.txt')
     with open(path) as f:
-        video_list = [l.strip() for l in f][2:]
+        video_list = [l.strip() + '.avi' for l in f][2:]
     return video_list
 
 
@@ -41,7 +41,7 @@ def _write_files(data_dict, output_dir):
         if osp.exists(path):
             logger.warning('Overwriting file %s', path)
         with open(path, 'w') as f:
-            json.dump(data, f)
+            json.dump(data, f, indent=4)
 
 
 def convert_annotation(annotation_dir, output_dir):

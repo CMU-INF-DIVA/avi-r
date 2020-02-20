@@ -11,7 +11,7 @@ class KitwareAnnotation(object):
     def __init__(self, video_name: str, annotation_dir: str):
         # Please explore the structure of raw_data yourself
         self.video_name = video_name
-        self.raw_data = self._load_raw_data(video_name, annotation_dir)
+        self.raw_data = self._load_raw_data(video_name[:-4], annotation_dir)
 
     def _split_meta(self, contents, key):
         meta = []
@@ -72,7 +72,6 @@ class KitwareAnnotation(object):
             start, end = act['timespan'][0]['tsr0']
             objects = []
             for actor in act['actors']:
-                actor_id = actor['id1']
                 bbox_history = {}
                 for geom in actor['geoms']:
                     frame_id = geom['ts0']
@@ -85,7 +84,7 @@ class KitwareAnnotation(object):
                 for frame_id in range(start, end + 1):
                     if frame_id not in bbox_history:
                         bbox_history[frame_id] = {}
-                obj = {'objectType': 'Vehicle', 'objectID': actor_id,
+                obj = {'objectType': actor['type'], 'objectID': actor['id1'],
                        'localization': {self.video_name: bbox_history}}
                 objects.append(obj)
             activity = {
