@@ -202,7 +202,8 @@ class VideoReader(object):
     def reset(self):
         """Reset the internal states to load the video from the beginning.
         """
-        self._container.close()
+        if hasattr(self, '_container'):
+            self._container.close()
         self._init()
 
     def __del__(self):
