@@ -40,6 +40,10 @@ class VideoReader(object):
         self.path = osp.join(parent_dir, video_path)
         if not osp.exists(self.path):
             raise FileNotFoundError(self.path)
+        if not self.path.endswith('.avi'):
+            raise NotImplementedError(
+                'Currently only supports video in .avi format, can not read %s' 
+                % (self.path))
         if silence_warning:
             self._logger = get_logger(
                 '%s@%s' % (__name__, self.path), logging.WARNING)
