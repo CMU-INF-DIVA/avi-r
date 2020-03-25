@@ -1,4 +1,9 @@
 import logging
+from functools import partial
+
+from tqdm.autonotebook import tqdm
+
+progressbar = partial(tqdm, dynamic_ncols=True)
 
 
 def get_logger(name, level=logging.INFO, log_file=None):

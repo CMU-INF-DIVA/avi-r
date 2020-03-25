@@ -1,10 +1,10 @@
-import os
-import json
 import argparse
+import json
+import os
 import os.path as osp
-from progressbar import progressbar
 from concurrent.futures import ProcessPoolExecutor
-from ..utils import get_logger
+
+from ..utils import get_logger, progressbar
 from .kf1 import KitwareAnnotation
 
 

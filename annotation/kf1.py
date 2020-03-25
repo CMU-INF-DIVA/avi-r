@@ -1,7 +1,7 @@
-import yaml
 import os.path as osp
 from collections import defaultdict
 
+import yaml
 
 FIELDS = ['activities', 'geom', 'types']
 

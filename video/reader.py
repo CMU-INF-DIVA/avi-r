@@ -1,9 +1,10 @@
-import av
 import heapq
 import logging
-import numpy as np
 import os.path as osp
 from typing import Tuple
+
+import av
+import numpy as np
 
 from ..utils import get_logger
 from .frame import Frame
@@ -42,7 +43,7 @@ class VideoReader(object):
             raise FileNotFoundError(self.path)
         if not self.path.endswith('.avi'):
             raise NotImplementedError(
-                'Currently only supports video in .avi format, can not read %s' 
+                'Currently only supports video in .avi format, can not read %s'
                 % (self.path))
         if silence_warning:
             self._logger = get_logger(
