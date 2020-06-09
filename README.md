@@ -1,5 +1,6 @@
 # AVI-R Package
 
+![Publish to PyPI](https://github.com/Lijun-Yu/avi-r/workflows/Publish%20to%20PyPI/badge.svg)
 Version 1.0.1 (formerly DIVA IO)
 
 Author: Lijun Yu
