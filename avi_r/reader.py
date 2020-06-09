@@ -53,7 +53,8 @@ class AVIReader(object):
             self._logger = get_logger(
                 '%s@%s' % (__name__, self.path), logging.INFO)
             av.logging.set_level(av.logging.INFO)
-        self._assert_msg = ' Please report %s to Lijun.' % (self.path)
+        self._assert_msg = 'Please open an issue with your video file at ' \
+            'https://github.com/Lijun-Yu/avi-r.'
         self.fix_missing = fix_missing
         if not self.fix_missing:
             self._logger.warning('NOT fixing missing frames.')
@@ -227,26 +228,32 @@ class AVIReader(object):
             seek_frame_id = start_frame_id
             for _ in range(retry):
                 if seek_frame_id != start_frame_id:
-                    self._logger.warn(
+                    self._logger.info(
                         'Failed to seek to frame %d, retrying with frame %d',
                         start_frame_id, seek_frame_id)
                 self._container.seek(seek_frame_id, stream=self._stream)
                 frame_gen = self._fix_missing(start_frame_id)
                 try:
                     frame = next(frame_gen)
+                    break
                 except StopIteration:
                     seek_frame_id -= retry_step
-                    continue
-                while frame.frame_id < start_frame_id:
+            else:
+                self._logger.warn(
+                    'Failed to seek to frame %d, iterating from the beginning',
+                    start_frame_id)
+                self._container.seek(0, stream=self._stream)
+                frame_gen = self._fix_missing(0)
+                frame = next(frame_gen)
+            while frame.frame_id < start_frame_id:
+                frame = next(frame_gen)
+            yield frame
+            while True:
+                try:
                     frame = next(frame_gen)
-                yield frame
-                while True:
-                    try:
-                        frame = next(frame_gen)
-                        yield frame
-                    except StopIteration:
-                        return
-            raise RuntimeError('Failed to seek to frame %d' % (start_frame_id))
+                    yield frame
+                except StopIteration:
+                    return
 
     def _fix_missing(self, start_frame_id):
         frame_gen = self._reorder()
