@@ -231,14 +231,21 @@ class VideoReader(object):
                         'Failed to seek to frame %d, retrying with frame %d',
                         start_frame_id, seek_frame_id)
                 self._container.seek(seek_frame_id, stream=self._stream)
-                success = False
-                for frame in self._fix_missing(start_frame_id):
-                    success = True
-                    if frame.frame_id >= start_frame_id:
+                frame_gen = self._fix_missing(start_frame_id)
+                try:
+                    frame = next(frame_gen)
+                except StopIteration:
+                    seek_frame_id -= retry_step
+                    continue
+                while frame.frame_id < start_frame_id:
+                    frame = next(frame_gen)
+                yield frame
+                while True:
+                    try:
+                        frame = next(frame_gen)
                         yield frame
-                if success:
-                    return
-                seek_frame_id -= retry_step
+                    except StopIteration:
+                        return
             raise RuntimeError('Failed to seek to frame %d' % (start_frame_id))
 
     def _fix_missing(self, start_frame_id):
