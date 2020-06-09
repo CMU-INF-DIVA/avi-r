@@ -1,0 +1,5 @@
+numpy
+av>=8.0
+opencv-python
+moviepy
+progressbar2

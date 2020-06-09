@@ -1,4 +1,4 @@
-# MEVA IO Package
+# AVI-R Package
 
 Version 1.0
 
@@ -12,7 +12,7 @@ Originally designed for the [MEVA](http://mevadata.org) dataset.
 ## Installation
 
 ```sh
-pip install robust_avi
+pip install avi-r
 ```
 
 ## Usage
