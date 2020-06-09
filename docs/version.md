@@ -1,6 +1,6 @@
 # Version History
 
-## AVI-R v1.0
+## AVI-R v1.0.1
 
 * Optimized random access.
 * Deprecate annotation converter.

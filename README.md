@@ -1,6 +1,6 @@
 # AVI-R Package
 
-Version 1.0 (formerly DIVA-IO)
+Version 1.0.1 (formerly DIVA IO)
 
 Author: Lijun Yu
 
