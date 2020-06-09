@@ -6,11 +6,11 @@ from typing import Tuple
 import av
 import numpy as np
 
-from ..utils import get_logger
 from .frame import Frame
+from .utils import get_logger
 
 
-class VideoReader(object):
+class AVIReader(object):
 
     def __init__(self, video_path: str, parent_dir: str = '',
                  fix_missing: bool = True, silence_warning: bool = True):

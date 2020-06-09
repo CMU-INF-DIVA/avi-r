@@ -1,48 +1,21 @@
-# DIVA IO Package
+# MEVA IO Package
 
-Version 0.3
+Version 1.0
 
 Author: Lijun Yu
 
 Email: lijun@lj-y.com
 
-IO interfaces for the [DIVA](https://www.iarpa.gov/index.php/research-programs/diva) project.
-
-## Version History
-
-* 0.3
-  * Optimized random access and fix missing.
-  * Robustness improvement.
-  * Speed test.
-* 0.2 (Deprecated)
-  * Real random access in video loader.
-  * Add annotation converter.
-  * Warning control option.
-* 0.1
-  * Initial release of video loader.
+A robust reader for AVI video files.
+Originally designed for the [MEVA](http://mevadata.org) dataset.
 
 ## Installation
 
-### Integration
-
-To use as a submodule in your git project, run
-
 ```sh
-git submodule add https://github.com/Lijun-Yu/diva_io.git
+pip install robust_avi
 ```
 
-### Requirements
-
-Environment requirements are listed in [environment.yml](environment.yml).
-For the `av` package, I recommend you install it via `conda` by
-
-```sh
-conda install "av>=6.2.0" -c conda-forge
-```
-
-as building from `pip` would require a lot of [dependencies](http://docs.mikeboers.com/pyav/7.0.0/overview/installation.html#dependencies).
-
-## Video Loader
+## Usage
 
 A robust video loader that deals with missing frames in the [MEVA dataset](http://mevadata.org).
 
@@ -112,31 +85,3 @@ For other usages, please see the comments in [video/reader.py](video/reader.py).
 ### Speed
 
 See [speed.md](docs/speed.md).
-
-## Annotation
-
-An annotation loader and converter for Kitware YML format in [meva-data-repo](https://gitlab.kitware.com/meva/meva-data-repo).
-
-Clone the meva-data-repo and set
-
-```python
-annotation_dir = 'path/to/meva-data-repo/annotation/DIVA-phase-2/MEVA/meva-annotations'
-```
-
-### Convert Annotation
-
-This is to convert the annotation from Kitware YML format to ActEV Scorer JSON format.
-Run the following command in shell outside the repo's director,
-
-```sh
-python -m diva_io.annotation.converter <annotation_dir> <output_dir>
-```
-
-### Read Annotation
-
-```python
-from diva_io.annotation import KitwareAnnotation
-video_name = '2018-03-11.11-15-04.11-20-04.school.G300'
-annotation = KitwareAnnotation(video_name, annotation_dir)
-# deal with annotation.raw_data
-```
