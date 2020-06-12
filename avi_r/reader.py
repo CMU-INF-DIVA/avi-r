@@ -1,4 +1,3 @@
-import heapq
 import logging
 import os.path as osp
 from typing import Tuple
@@ -298,21 +297,29 @@ class AVIReader(object):
                 'Missing frames from %d to %d, skipped',
                 start_frame_id, end_frame_id)
 
-    def _reorder(self, buffer_size=5):
+    def _reorder(self):
         buffer = []
         for frame in self._decode():
-            heapq.heappush(buffer, (frame.frame_id, frame))
-            if len(buffer) > buffer_size:
-                _, frame = heapq.heappop(buffer)
-                yield frame
-        while len(buffer) > 0:
-            _, frame = heapq.heappop(buffer)
-            yield frame
+            if frame.key_frame:
+                for reordered_frame in sorted(buffer, key=lambda f: f.frame_id):
+                    yield reordered_frame
+                buffer = [frame]
+            else:
+                buffer.append(frame)
+            assert buffer[0].frame.key_frame
+        if len(buffer) > 0:
+            buffer = sorted(buffer, key=lambda f: f.frame_id)
+            for f in buffer:
+                yield f
 
     def _decode(self):
         for packet in self._container.demux():
             try:
                 for frame in packet.decode():
-                    yield Frame(frame)
+                    frame = Frame(frame)
+                    if frame.frame.is_corrupt:
+                        self._logger.info('Corrupt frame %d', frame.frame_id)
+                        continue
+                    yield frame
             except av.AVError:
                 self._logger.info('Decode failed for packet %s', packet)

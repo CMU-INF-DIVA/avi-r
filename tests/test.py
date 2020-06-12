@@ -50,7 +50,9 @@ def speed_test_opencv(video_dir, video_list=VIDEO_LIST):
         bar = ProgressBar().start()
         cap = cv2.VideoCapture(osp.join(video_dir, video_name))
         for _ in bar(range(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))):
-            cap.read()
+            r, _ = cap.read()
+            if not r:
+                break
 
 
 def speed_test_moviepy(video_dir, video_list=VIDEO_LIST):
@@ -59,15 +61,15 @@ def speed_test_moviepy(video_dir, video_list=VIDEO_LIST):
         print('\t', video_name, flush=True)
         bar = ProgressBar().start()
         clip = VideoFileClip(osp.join(video_dir, video_name))
-        for i in bar(range(int(clip.duration * clip.fps))):
+        for i in bar(range(int(round(clip.duration * clip.fps)))):
             clip.get_frame(i / clip.fps)
 
 
-def speed_test_avi_r(video_dir, fix_missing, video_list=VIDEO_LIST):
+def speed_test_avi_r(video_dir, video_list=VIDEO_LIST):
     for video_name in video_list:
         print('\t', video_name, flush=True)
         bar = ProgressBar().start()
-        video = AVIReader(video_name, video_dir, fix_missing=fix_missing)
+        video = AVIReader(video_name, video_dir)
         for _ in bar(range(video.length)):
             video.read()
 

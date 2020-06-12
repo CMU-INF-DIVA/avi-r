@@ -1,5 +1,9 @@
 # Version History
 
+## AVI-R v1.1
+
+* Optimized stability and efficiency for bidirectional frame.
+
 ## AVI-R v1.0.1
 
 * Optimized random access.
