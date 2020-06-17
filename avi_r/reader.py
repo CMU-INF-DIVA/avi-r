@@ -273,8 +273,6 @@ class AVIReader(object):
                 frame = None
                 next_frame_id = self.length
             frame_gap = next_frame_id - prev_frame.frame_id
-            assert frame_gap >= 1, \
-                'Unreordered bidirectional frame occured.' + self._assert_msg
             if frame_gap > 1:
                 yield from self._fix_missing_one(
                     prev_frame.frame_id + 1, next_frame_id - 1, prev_frame)

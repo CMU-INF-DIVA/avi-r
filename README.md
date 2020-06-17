@@ -24,7 +24,8 @@ In `AVI-R`, missing frames are automatically filled with the previous available 
 This ensures you are getting the correct frame ids and valid frame contents all the time.
 
 In comparison, [OpenCV](https://opencv.org)'s `cv2.VideoCapture` would skip missing frames without warning, leading to wrong frame ids.
-And [pims](https://github.com/soft-matter/pims) would return empty frames also without warning.
+[Pims](https://github.com/soft-matter/pims) would return empty frames also without warning.
+And [decord](https://github.com/dmlc/decord) would crash.
 
 ### Iterator Interface
 
