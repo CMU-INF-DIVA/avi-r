@@ -1,5 +1,9 @@
 # Version History
 
+## AVI-R v1.2
+
+* Update video properties.
+
 ## AVI-R v1.1.1
 
 * Consistent action for `seek(0)`.

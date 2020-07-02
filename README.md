@@ -75,10 +75,10 @@ for frame in video.get_iter(length):
 ### Video Properties
 
 ```python
-video.width # cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+video.num_frames # cap.get(cv2.CAP_PROP_FRAME_COUNT)
+video.frame_rate # cap.get(cv2.CAP_PROP_FPS)
 video.height # cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-video.fps # cap.get(cv2.CAP_PROP_FPS)
-video.length # cap.get(cv2.CAP_PROP_FRAME_COUNT)
+video.width # cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 ```
 
 ### Other Interfaces

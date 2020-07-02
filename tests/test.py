@@ -20,14 +20,6 @@ VIDEO_LIST = [
 
 def integrity_test(video_dir, video_list=VIDEO_LIST,
                    random_access_point=(5790, 100)):
-    print('No fix missing')
-    for video_name in video_list:
-        print('\t', video_name, flush=True)
-        bar = ProgressBar().start()
-        v = AVIReader(video_name, video_dir, fix_missing=False)
-        for i, f in bar(enumerate(v)):
-            pass
-
     print('Fix missing with random access')
     start_frame_id, length = random_access_point
     for video_name in video_list:
@@ -41,6 +33,13 @@ def integrity_test(video_dir, video_list=VIDEO_LIST,
         v.seek(start_frame_id)
         for i, frame in bar(enumerate(v.get_iter(length))):
             assert frame.frame_id == start_frame_id + i
+    print('No fix missing')
+    for video_name in video_list:
+        print('\t', video_name, flush=True)
+        bar = ProgressBar().start()
+        v = AVIReader(video_name, video_dir, fix_missing=False)
+        for i, f in bar(enumerate(v)):
+            pass
 
 
 def speed_test_opencv(video_dir, video_list=VIDEO_LIST):

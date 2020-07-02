@@ -58,10 +58,14 @@ class AVIReader(object):
         if not self.fix_missing:
             self._logger.warning('NOT fixing missing frames.')
         self._init()
-        self.length = self._stream.duration
-        self.fps = float(self._stream.average_rate)
+        self.num_frames = self._stream.duration
+        self.frame_rate = float(self._stream.average_rate)
         self.height = self._stream.codec_context.format.height
         self.width = self._stream.codec_context.format.width
+
+        # Deprecated attributes
+        self.length = self.num_frames
+        self.fps = self.frame_rate
         self.shape = (self.height, self.width)
 
     def __iter__(self):
@@ -96,8 +100,8 @@ class AVIReader(object):
         Frame
             A Frame object.
         """
-        if limit is None or limit > self.length:
-            limit = self.length
+        if limit is None or limit > self.num_frames:
+            limit = self.num_frames
         for _ in range(limit):
             try:
                 yield self.get_skip(stride)
@@ -182,10 +186,10 @@ class AVIReader(object):
         ValueError
             If the frame_id does not exist.
         """
-        if frame_id >= self.length:
+        if frame_id >= self.num_frames:
             raise ValueError(
-                'Cannot seek frame id %d in a video of length %d' % (
-                    frame_id, self.length))
+                'Cannot seek frame id %d in a video with %d frames' % (
+                    frame_id, self.num_frames))
         self._frame_gen = self._get_frame_gen(frame_id)
 
     def get_at(self, frame_id):
@@ -269,7 +273,7 @@ class AVIReader(object):
                 next_frame_id = frame.frame_id
             except StopIteration:
                 frame = None
-                next_frame_id = self.length
+                next_frame_id = self.num_frames
             frame_gap = next_frame_id - prev_frame.frame_id
             if frame_gap > 1:
                 yield from self._fix_missing_one(
