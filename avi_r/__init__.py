@@ -1,3 +1,3 @@
-from .reader import AVIReader
-
 __author__ = 'Lijun Yu'
+
+from .reader import AVIReader

@@ -1,5 +1,9 @@
 # Version History
 
+## AVI-R v1.1.1
+
+* Consistent action for `seek(0)`.
+
 ## AVI-R v1.1
 
 * Optimized stability and efficiency for bidirectional frame.

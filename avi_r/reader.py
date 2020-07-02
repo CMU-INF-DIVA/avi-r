@@ -221,38 +221,36 @@ class AVIReader(object):
         self._frame_gen = self._get_frame_gen()
 
     def _get_frame_gen(self, start_frame_id=0, retry=5, retry_step=120):
-        if start_frame_id == 0:
-            yield from self._fix_missing(start_frame_id)
+        seek_frame_id = start_frame_id
+        for _ in range(retry):
+            if seek_frame_id != start_frame_id:
+                self._logger.info(
+                    'Failed to seek to frame %d, retrying with frame %d',
+                    start_frame_id, seek_frame_id)
+            self._container.seek(seek_frame_id, stream=self._stream)
+            frame_gen = self._fix_missing(start_frame_id)
+            try:
+                frame = next(frame_gen)
+                break
+            except StopIteration:
+                seek_frame_id -= retry_step
         else:
-            seek_frame_id = start_frame_id
-            for _ in range(retry):
-                if seek_frame_id != start_frame_id:
-                    self._logger.info(
-                        'Failed to seek to frame %d, retrying with frame %d',
-                        start_frame_id, seek_frame_id)
-                self._container.seek(seek_frame_id, stream=self._stream)
-                frame_gen = self._fix_missing(start_frame_id)
-                try:
-                    frame = next(frame_gen)
-                    break
-                except StopIteration:
-                    seek_frame_id -= retry_step
-            else:
-                self._logger.warn(
-                    'Failed to seek to frame %d, iterating from the beginning',
-                    start_frame_id)
-                self._container.seek(0, stream=self._stream)
-                frame_gen = self._fix_missing(0)
+            seek_frame_id = 0
+            self._logger.warn(
+                'Failed to seek to frame %d, iterating from the beginning',
+                start_frame_id)
+            self._container.seek(seek_frame_id, stream=self._stream)
+            frame_gen = self._fix_missing(seek_frame_id)
+            frame = next(frame_gen)
+        while frame.frame_id < start_frame_id:
+            frame = next(frame_gen)
+        yield frame
+        while True:
+            try:
                 frame = next(frame_gen)
-            while frame.frame_id < start_frame_id:
-                frame = next(frame_gen)
-            yield frame
-            while True:
-                try:
-                    frame = next(frame_gen)
-                    yield frame
-                except StopIteration:
-                    return
+                yield frame
+            except StopIteration:
+                return
 
     def _fix_missing(self, start_frame_id):
         frame_gen = self._reorder()
