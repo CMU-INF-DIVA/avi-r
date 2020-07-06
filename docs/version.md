@@ -1,6 +1,6 @@
 # Version History
 
-## AVI-R v1.2
+## AVI-R v1.2.1
 
 * Update video properties.
 

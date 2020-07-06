@@ -1,6 +1,6 @@
 import logging
 import os.path as osp
-from typing import Tuple
+from typing import Iterator, Tuple
 
 import av
 import numpy as np
@@ -81,7 +81,7 @@ class AVIReader(object):
         self.reset()
         yield from self._frame_gen
 
-    def get_iter(self, limit: int = None, stride: int = 1) -> Frame:
+    def get_iter(self, limit: int = None, stride: int = 1) -> Iterator[Frame]:
         """Get an iterator to yield a frame every stride frames and stop at a
         limited number of yielded frames.
 
