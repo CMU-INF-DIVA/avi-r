@@ -1,5 +1,9 @@
 # Version History
 
+## AVI-R v1.3
+
+* Fix memory leak with explicit `close` method.
+
 ## AVI-R v1.2.1
 
 * Update video properties.

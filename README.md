@@ -37,6 +37,7 @@ for frame in video:
     image = frame.numpy()
     # image is an uint8 array in a shape of (height, width, channel[BGR])
     # ... Do something with the image
+video.close() # Release internal buffers
 ```
 
 ### Replace `cv2.VideoCapture`
@@ -56,6 +57,7 @@ cap = AVIReader(video_path)
 ```
 
 `AVIReader.read` follows the schema of `cv2.VideoCapture.read` but automatically inserts the missing frames while reading the video.
+`AVIReader.release` also follows `cv2.VideoCapture.release`.
 
 ### Random Access
 

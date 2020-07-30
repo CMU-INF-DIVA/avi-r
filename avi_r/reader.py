@@ -53,7 +53,7 @@ class AVIReader(object):
                 '%s@%s' % (__name__, self.path), logging.INFO)
             av.logging.set_level(av.logging.INFO)
         self._assert_msg = 'Please open an issue with your video file at ' \
-            'https://github.com/Lijun-Yu/avi-r.'
+            'https://github.com/CMU-INF-DIVA/avi-r.'
         self.fix_missing = fix_missing
         if not self.fix_missing:
             self._logger.warning('NOT fixing missing frames.')
@@ -211,18 +211,36 @@ class AVIReader(object):
     def reset(self):
         """Reset the internal states to load the video from the beginning.
         """
-        if hasattr(self, '_container'):
-            self._container.close()
+        self._del()
         self._init()
+
+    def close(self):
+        """Close the reader and delete internal buffers.
+        """
+        self._del()
+
+    def release(self):
+        """Following the API of cv2.VideoCapture.release() for consistency 
+        in old codes.
+        """
+        self.close()
 
     def __del__(self):
         if hasattr(self, '_container'):
-            self._container.close()
+            self._del()
 
     def _init(self, video_stream_id=0):
         self._container = av.open(self.path)
         self._stream = self._container.streams.video[video_stream_id]
         self._frame_gen = self._get_frame_gen()
+        self.reorder_buffer = []
+
+    def _del(self):
+        self._container.close()
+        del self._container
+        del self._stream
+        del self._frame_gen
+        del self.reorder_buffer
 
     def _get_frame_gen(self, start_frame_id=0, retry=5, retry_step=120):
         seek_frame_id = start_frame_id
@@ -298,18 +316,20 @@ class AVIReader(object):
                 start_frame_id, end_frame_id)
 
     def _reorder(self):
-        buffer = []
+        self.reorder_buffer = []
         for frame in self._decode():
             if frame.key_frame:
-                for reordered_frame in sorted(buffer, key=lambda f: f.frame_id):
+                for reordered_frame in sorted(
+                        self.reorder_buffer, key=lambda f: f.frame_id):
                     yield reordered_frame
-                buffer = [frame]
+                self.reorder_buffer = [frame]
             else:
-                buffer.append(frame)
-            assert buffer[0].frame.key_frame
-        if len(buffer) > 0:
-            buffer = sorted(buffer, key=lambda f: f.frame_id)
-            for f in buffer:
+                self.reorder_buffer.append(frame)
+            assert self.reorder_buffer[0].frame.key_frame
+        if len(self.reorder_buffer) > 0:
+            self.reorder_buffer = sorted(
+                self.reorder_buffer, key=lambda f: f.frame_id)
+            for f in self.reorder_buffer:
                 yield f
 
     def _decode(self):
