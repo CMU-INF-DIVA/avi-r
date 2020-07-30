@@ -1,5 +1,9 @@
 # Version History
 
+## AVI-R v1.3.1
+
+* Optimized reorder buffer for faster random access.
+
 ## AVI-R v1.3
 
 * Fix memory leak with explicit `close` method.

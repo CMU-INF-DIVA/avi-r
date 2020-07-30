@@ -319,18 +319,19 @@ class AVIReader(object):
         self.reorder_buffer = []
         for frame in self._decode():
             if frame.key_frame:
-                for reordered_frame in sorted(
-                        self.reorder_buffer, key=lambda f: f.frame_id):
-                    yield reordered_frame
+                yield from sorted(
+                    self.reorder_buffer, key=lambda f: f.frame_id)
                 self.reorder_buffer = [frame]
             else:
-                self.reorder_buffer.append(frame)
-            assert self.reorder_buffer[0].frame.key_frame
+                if len(self.reorder_buffer) == 1 and \
+                        frame.frame_id == self.reorder_buffer[0].frame_id + 1:
+                    yield self.reorder_buffer[0]
+                    self.reorder_buffer[0] = frame
+                else:
+                    self.reorder_buffer.append(frame)
         if len(self.reorder_buffer) > 0:
-            self.reorder_buffer = sorted(
+            yield from sorted(
                 self.reorder_buffer, key=lambda f: f.frame_id)
-            for f in self.reorder_buffer:
-                yield f
 
     def _decode(self):
         for packet in self._container.demux():

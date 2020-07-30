@@ -14,7 +14,7 @@ VIDEO_LIST = [
     '2018-03-11.16-25-00.16-30-00.school.G639.avi',  # bidirectional
     '2018-03-11.11-35-00.11-40-00.school.G299.avi',  # frame id misorder
     '2018-03-11.11-35-00.11-40-00.school.G330.avi',
-    '2018-03-12.10-05-00.10-10-00.hospital.G436.avi'  # first frame fail
+    '2018-03-12.10-05-00.10-10-00.hospital.G436.avi',  # first frame fail
 ]
 
 
