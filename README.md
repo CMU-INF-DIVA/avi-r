@@ -72,6 +72,7 @@ video.seek(start_frame_id)
 for frame in video.get_iter(length):
     image = frame.numpy()
     # ... Do something with the image
+video.close()
 ```
 
 ### Video Properties
