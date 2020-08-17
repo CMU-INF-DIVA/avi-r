@@ -249,19 +249,24 @@ class AVIReader(object):
                 self._logger.info(
                     'Failed to seek to frame %d, retrying with frame %d',
                     start_frame_id, seek_frame_id)
-            self._container.seek(seek_frame_id, stream=self._stream)
-            frame_gen = self._fix_missing(start_frame_id)
             try:
+                self._container.seek(seek_frame_id, stream=self._stream)
+                frame_gen = self._fix_missing(start_frame_id)
                 frame = next(frame_gen)
                 break
-            except StopIteration:
+            except:
                 seek_frame_id -= retry_step
         else:
             seek_frame_id = 0
             self._logger.warn(
                 'Failed to seek to frame %d, iterating from the beginning',
                 start_frame_id)
-            self._container.seek(seek_frame_id, stream=self._stream)
+            try:
+                self._container.seek(seek_frame_id, stream=self._stream)
+            except:
+                self._logger.exception(
+                    'Failed to seek to frame 0, still trying to read the '
+                    'current frame, please check its frame id')
             frame_gen = self._fix_missing(seek_frame_id)
             frame = next(frame_gen)
         while frame.frame_id < start_frame_id:

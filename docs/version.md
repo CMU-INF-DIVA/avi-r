@@ -1,5 +1,9 @@
 # Version History
 
+## AVI-R v1.3.2
+
+* More robust seek.
+
 ## AVI-R v1.3.1
 
 * Optimized reorder buffer for faster random access.
