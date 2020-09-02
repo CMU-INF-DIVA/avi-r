@@ -255,7 +255,7 @@ class AVIReader(object):
                 frame = next(frame_gen)
                 break
             except:
-                seek_frame_id -= retry_step
+                seek_frame_id = max(0, seek_frame_id - retry_step)
         else:
             seek_frame_id = 0
             self._logger.warn(

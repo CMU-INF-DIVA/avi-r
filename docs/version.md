@@ -1,5 +1,9 @@
 # Version History
 
+## AVI-R v1.3.3
+
+* Fix seek retry.
+
 ## AVI-R v1.3.2
 
 * More robust seek.
