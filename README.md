@@ -1,6 +1,7 @@
 # AVI-R Package
 
 [![PyPI version](https://badge.fury.io/py/avi-r.svg)](https://badge.fury.io/py/avi-r)
+[![Downloads](https://pepy.tech/badge/avi-r)](https://pepy.tech/project/avi-r)
 ![Publish to PyPI](https://github.com/Lijun-Yu/avi-r/workflows/Publish%20to%20PyPI/badge.svg)
 (formerly DIVA IO)
 
