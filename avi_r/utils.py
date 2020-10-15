@@ -1,5 +1,4 @@
 import logging
-from functools import partial
 
 
 def get_logger(name, level=logging.INFO, log_file=None):
