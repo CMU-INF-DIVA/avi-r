@@ -1,5 +1,9 @@
 # Version History
 
+## AVI-R v1.3.4
+
+* Ignore errors in metadata decoding.
+
 ## AVI-R v1.3.3
 
 * Fix seek retry.

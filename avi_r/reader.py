@@ -230,7 +230,7 @@ class AVIReader(object):
             self._del()
 
     def _init(self, video_stream_id=0):
-        self._container = av.open(self.path)
+        self._container = av.open(self.path, metadata_errors='ignore')
         self._stream = self._container.streams.video[video_stream_id]
         self._frame_gen = self._get_frame_gen()
         self.reorder_buffer = []
