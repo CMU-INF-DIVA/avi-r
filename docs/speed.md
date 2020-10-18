@@ -12,13 +12,14 @@ Test performed by [tests/speed_test.sh](../tests/speed_test.sh).
 - Memory: 128GB
 - Disk: SSD
 - ffmpeg: 4.0
+- moviepy: 1.0.3
 - opencv: 4.2.0
 
 ## Overall Performance
 
 Loading all frames of 7 videos from the [MEVA dataset](http://mevadata.org). Each video is 5-min long and 1080p at 30 fps.
 
-|                 | `avi_r.AVIReader` | `pymovie.editor .VideoFileClip` | `cv2.VideoCapture` |
+|                 | `avi_r.AVIReader` | `moviepy.editor.VideoFileClip` | `cv2.VideoCapture` |
 | :-------------: | :---------------: | :-----------------------------: | :----------------: |
 |    User Time    |      331.10s      |             889.68s             |      807.88s       |
 |   System Time   |       0.80s       |             287.64s             |       5.88s        |
@@ -29,7 +30,7 @@ Loading all frames of 7 videos from the [MEVA dataset](http://mevadata.org). Eac
 
 Loading time and number of frames on each video.
 
-|                   Video Name                   |                    Video Description                    | `avi_r.AVIReader` | `pymovie.editor .VideoFileClip` | `cv2.VideoCapture` |
+|                   Video Name                   |                    Video Description                    | `avi_r.AVIReader` | `moviepy.editor .VideoFileClip` | `cv2.VideoCapture` |
 | :--------------------------------------------: | :-----------------------------------------------------: | :---------------: | :-----------------------------: | :----------------: |
 | 2018-03-11.16-30-08.16-35-08.hospital.G436.avi |                       No missing                        |    0:44 / 9000    |           0:57 / 9000           |    0:26 / 9000     |
 |  2018-03-07.16-55-06.17-00-06.school.G336.avi  |                  Missing 104-109, 2294                  |    0:54 / 9007    |           0:56 / 9007           |  0:26  / **8980**  |
