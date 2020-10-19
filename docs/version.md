@@ -1,5 +1,9 @@
 # Version History
 
+## AVI-R v1.3.6
+
+* Add timeout for PyAV.
+
 ## AVI-R v1.3.5
 
 * More robust extraction of frame size.
