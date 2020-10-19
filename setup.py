@@ -8,7 +8,7 @@ with open('requirements.txt') as f:
 
 setuptools.setup(
     name='avi-r',
-    version='1.3.4',
+    version='1.3.5',
     author='Lijun Yu',
     author_email='lijun@lj-y.com',
     description='A robust reader for avi videos.',

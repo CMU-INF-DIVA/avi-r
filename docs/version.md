@@ -1,5 +1,9 @@
 # Version History
 
+## AVI-R v1.3.5
+
+* More robust extraction of frame size.
+
 ## AVI-R v1.3.4
 
 * Ignore errors in metadata decoding.

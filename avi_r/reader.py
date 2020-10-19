@@ -60,8 +60,8 @@ class AVIReader(object):
         self._init()
         self.num_frames = self._stream.duration
         self.frame_rate = float(self._stream.average_rate)
-        self.height = self._stream.codec_context.format.height
-        self.width = self._stream.codec_context.format.width
+        self.height = self._stream.codec_context.height
+        self.width = self._stream.codec_context.width
 
         # Deprecated attributes
         self.length = self.num_frames
