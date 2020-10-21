@@ -12,7 +12,8 @@ from .utils import get_logger
 class AVIReader(object):
 
     def __init__(self, video_path: str, parent_dir: str = '',
-                 fix_missing: bool = True, silence_warning: bool = True):
+                 fix_missing: bool = True, silence_warning: bool = True,
+                 **kwargs):
         """Read frames from a video file.
 
         Parameters
@@ -57,7 +58,7 @@ class AVIReader(object):
         self.fix_missing = fix_missing
         if not self.fix_missing:
             self._logger.warning('NOT fixing missing frames.')
-        self._init()
+        self._init(**kwargs)
         self.num_frames = self._stream.duration
         self.frame_rate = float(self._stream.average_rate)
         self.height = self._stream.codec_context.height
@@ -229,9 +230,9 @@ class AVIReader(object):
         if hasattr(self, '_container'):
             self._del()
 
-    def _init(self, video_stream_id=0):
+    def _init(self, video_stream_id=0, timeout=None):
         self._container = av.open(
-            self.path, metadata_errors='replace', timeout=60)
+            self.path, metadata_errors='replace', timeout=timeout)
         self._stream = self._container.streams.video[video_stream_id]
         self._frame_gen = self._get_frame_gen()
         self.reorder_buffer = []

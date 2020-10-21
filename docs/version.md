@@ -1,5 +1,10 @@
 # Version History
 
+## AVI-R v1.3.7
+
+* Remove default timeout.
+* Bypass kwargs to _init.
+
 ## AVI-R v1.3.6
 
 * Add timeout for PyAV.
