@@ -230,7 +230,7 @@ class AVIReader(object):
         if hasattr(self, '_container'):
             self._del()
 
-    def _init(self, video_stream_id=0, timeout=None):
+    def _init(self, video_stream_id=0, timeout=20):
         self._container = av.open(
             self.path, metadata_errors='replace', timeout=timeout)
         self._stream = self._container.streams.video[video_stream_id]
@@ -246,6 +246,7 @@ class AVIReader(object):
 
     def _get_frame_gen(self, start_frame_id=0, retry=5, retry_step=120):
         seek_frame_id = start_frame_id
+        retry = min(retry, start_frame_id // retry_step + 1)
         for _ in range(retry):
             if seek_frame_id != start_frame_id:
                 self._logger.info(
@@ -270,9 +271,15 @@ class AVIReader(object):
                     'Failed to seek to frame 0, still trying to read the '
                     'current frame, please check its frame id')
             frame_gen = self._fix_missing(seek_frame_id)
-            frame = next(frame_gen)
+            try:
+                frame = next(frame_gen)
+            except StopIteration:
+                return
         while frame.frame_id < start_frame_id:
-            frame = next(frame_gen)
+            try:
+                frame = next(frame_gen)
+            except StopIteration:
+                return
         yield frame
         while True:
             try:

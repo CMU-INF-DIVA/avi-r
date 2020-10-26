@@ -1,5 +1,11 @@
 # Version History
 
+## AVI-R v1.3.8
+
+* Add back timeout.
+* More robust during iteration initialization.
+* Limit seek retries based on frame id.
+
 ## AVI-R v1.3.7
 
 * Remove default timeout.
