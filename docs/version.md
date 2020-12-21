@@ -1,5 +1,10 @@
 # Version History
 
+## AVI-R v1.3.9
+
+* Ensure seeking frame_ids are Python integers.
+* Optimize logs of seeking error.
+
 ## AVI-R v1.3.8
 
 * Add back timeout.

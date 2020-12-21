@@ -193,7 +193,7 @@ class AVIReader(object):
                     frame_id, self.num_frames))
         self._frame_gen = self._get_frame_gen(frame_id)
 
-    def get_at(self, frame_id):
+    def get_at(self, frame_id: int):
         """Get a specific frame.
 
         Parameters
@@ -245,25 +245,29 @@ class AVIReader(object):
         del self.reorder_buffer
 
     def _get_frame_gen(self, start_frame_id=0, retry=5, retry_step=120):
+        start_frame_id = int(start_frame_id)
         seek_frame_id = start_frame_id
         retry = min(retry, start_frame_id // retry_step + 1)
-        for _ in range(retry):
-            if seek_frame_id != start_frame_id:
-                self._logger.info(
-                    'Failed to seek to frame %d, retrying with frame %d',
-                    start_frame_id, seek_frame_id)
+        for retry_i in range(1, retry + 1):
             try:
                 self._container.seek(seek_frame_id, stream=self._stream)
                 frame_gen = self._fix_missing(start_frame_id)
                 frame = next(frame_gen)
                 break
             except:
-                seek_frame_id = max(0, seek_frame_id - retry_step)
+                if retry_i < retry:
+                    new_seek_frame_id = max(0, seek_frame_id - retry_step)
+                    self._logger.info(
+                        'Failed to seek to frame %d, retrying with frame %d',
+                        seek_frame_id, new_seek_frame_id, exc_info=True)
+                    seek_frame_id = new_seek_frame_id
+                    continue
+                self._logger.info('Failed to seek to frame %d', seek_frame_id)
+                self._logger.warn(
+                    'Failed to seek for frame %d after %d retries, iterating '
+                    'from the begining', start_frame_id, retry, exc_info=True)
         else:
             seek_frame_id = 0
-            self._logger.warn(
-                'Failed to seek to frame %d, iterating from the beginning',
-                start_frame_id)
             try:
                 self._container.seek(seek_frame_id, stream=self._stream)
             except:
